@@ -612,4 +612,48 @@ async function submitEdit() {
         });
         const data = await resp.json();
         if (data.code === 200) {
-            showToast('✅
+            showToast('✅ 修改已提交，等待商家确认');
+            closeEditModal();
+            doQuery();
+        } else {
+            showToast(data.msg || '修改失败');
+        }
+    } catch(e) { showToast('网络异常，请重试'); }
+}
+
+// ============================================================
+// 库存图片弹窗
+// ============================================================
+async function openStockModal() {
+    const modal = document.getElementById('stockModal');
+    const body = document.getElementById('stockModalBody');
+    modal.classList.add('show');
+    body.innerHTML = '<p style="color:#999;padding:20px;">加载中...</p>';
+
+    try {
+        const resp = await fetch(`${API_BASE}/api/agent/config?agentId=${currentAgentId}`);
+        const data = await resp.json();
+        if (data.code === 200 && data.data && data.data.stock_image_url) {
+            body.innerHTML = `<img src="${data.data.stock_image_url}" alt="库存图片" onerror="this.parentElement.innerHTML='<p style=\\'color:#999;padding:20px;\\'>图片加载失败</p>'">`;
+        } else {
+            body.innerHTML = '<p style="color:#999;padding:20px;">暂无库存图片</p>';
+        }
+    } catch(e) {
+        body.innerHTML = '<p style="color:#999;padding:20px;">加载失败，请刷新重试</p>';
+    }
+}
+function closeStockModal() {
+    document.getElementById('stockModal').classList.remove('show');
+}
+
+// ============================================================
+// 页面加载
+// ============================================================
+document.addEventListener('DOMContentLoaded', function() {
+    initProvince();
+    initEditProvince();
+    loadAgentConfig();
+});
+</script>
+</body>
+</html>
