@@ -8,7 +8,6 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, Arial, sans-serif; background: #f0f2f5; padding: 12px; min-height: 100vh; }
         .container { max-width: 700px; margin: 0 auto; }
-
         .login-box { background: white; max-width: 360px; margin: 60px auto; padding: 32px 24px; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.06); }
         .login-box h2 { text-align: center; font-size: 20px; margin-bottom: 4px; }
         .login-box p.sub { text-align: center; color: #999; font-size: 13px; margin-bottom: 20px; }
@@ -17,17 +16,14 @@
         .login-box button { width: 100%; padding: 14px; background: #4a6cf7; color: white; border: none; border-radius: 10px; font-size: 17px; font-weight: 600; cursor: pointer; }
         .login-box button:active { background: #3a56d4; }
         .login-error { color: #ff4757; text-align: center; font-size: 14px; margin-top: 12px; display: none; }
-
         .header { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; flex-wrap: wrap; gap: 8px; }
         .header h1 { font-size: 18px; color: #333; }
         .header .info { font-size: 13px; color: #999; }
         .header .logout-btn { background: none; border: 1px solid #ddd; padding: 6px 16px; border-radius: 8px; font-size: 13px; color: #666; cursor: pointer; }
-
         .stats { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
         .stats .stat-item { background: white; padding: 6px 14px; border-radius: 20px; font-size: 13px; color: #666; border: 1px solid #eee; cursor: pointer; }
         .stats .stat-item.active { background: #4a6cf7; color: white; border-color: #4a6cf7; }
         .stats .stat-item .num { font-weight: 700; margin-right: 2px; }
-
         .order-card { background: white; border-radius: 14px; padding: 14px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
         .order-card .top { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 4px; }
         .order-card .top .name { font-weight: 600; font-size: 15px; color: #333; }
@@ -42,24 +38,21 @@
         .order-card .bottom .btn-ship { padding: 6px 16px; background: #22c55e; color: white; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; }
         .order-card .bottom .btn-reject { padding: 6px 16px; background: #ff6b6b; color: white; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; }
         .order-card .bottom .btn-danger { padding: 6px 16px; background: #ff6b6b; color: white; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; }
-
         .badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; }
-        .badge.status-0 { background: #fff3cd; color: #856404; }
-        .badge.status-1 { background: #cce5ff; color: #004085; }
-        .badge.status-2 { background: #d4edda; color: #155724; }
-        .badge.status-3 { background: #d4edda; color: #155724; }
-        .badge.status-4 { background: #f8d7da; color: #721c24; }
+        .badge.s0 { background: #fff3cd; color: #856404; }
+        .badge.s1 { background: #cce5ff; color: #004085; }
+        .badge.s2 { background: #cce5ff; color: #004085; }
+        .badge.s3 { background: #d4edda; color: #155724; }
+        .badge.s4 { background: #d4edda; color: #155724; }
+        .badge.s5 { background: #f8d7da; color: #721c24; }
         .agent-tag { font-size: 11px; color: #999; background: #f0f0f0; padding: 1px 10px; border-radius: 12px; }
-
         .empty-tip, .loading { text-align: center; color: #ccc; padding: 30px 0; font-size: 14px; }
         .toast { position: fixed; top: 20%; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.78); color: white; padding: 10px 20px; border-radius: 10px; font-size: 14px; z-index: 999; display: none; max-width: 80%; text-align: center; }
         .toast.show { display: block; animation: fadeIn 0.3s; }
         @keyframes fadeIn { from { opacity: 0; transform: translateX(-50%) translateY(-10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
-
         .tab-bar { display: flex; gap: 4px; margin-bottom: 12px; background: white; border-radius: 10px; padding: 4px; }
         .tab-bar button { flex: 1; padding: 8px; border: none; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; background: transparent; color: #999; }
         .tab-bar button.active { background: #4a6cf7; color: white; }
-
         .settings-area { background: white; border-radius: 14px; padding: 16px; margin-bottom: 12px; }
         .settings-area .form-group { margin-bottom: 12px; }
         .settings-area .form-group label { display: block; font-size: 14px; color: #666; margin-bottom: 4px; font-weight: 500; }
@@ -75,65 +68,51 @@
 <div id="toast" class="toast"></div>
 
 <div class="container">
-    <!-- ====== 登录界面 ====== -->
     <div id="loginBox" class="login-box">
         <h2>🔐 总管理后台</h2>
         <p class="sub">请输入管理密码</p>
         <input id="pwdInput" type="password" placeholder="请输入密码" onkeyup="if(event.keyCode===13) doLogin()">
         <button onclick="doLogin()">登 录</button>
         <p id="loginError" class="login-error">❌ 密码错误，请重试</p>
-        <div style="text-align:center;margin-top:12px;font-size:12px;color:#ccc;">
-            默认密码: Aa7758521
-        </div>
+        <div style="text-align:center;margin-top:12px;font-size:12px;color:#ccc;">默认密码: Aa7758521</div>
     </div>
 
-    <!-- ====== 管理界面 ====== -->
     <div id="adminPanel" style="display:none;">
         <div class="header">
-            <div>
-                <h1>📦 总管理后台</h1>
-                <span class="info" id="adminInfo">总管理员</span>
-            </div>
+            <div><h1>📦 总管理后台</h1><span class="info" id="adminInfo">总管理员</span></div>
             <button class="logout-btn" onclick="doLogout()">退出</button>
         </div>
 
-        <!-- Tab 切换 -->
         <div class="tab-bar">
             <button class="active" onclick="switchTab('orders')" id="tabOrdersBtn">📋 订单管理</button>
             <button onclick="switchTab('settings')" id="tabSettingsBtn">⚙️ 页面设置</button>
             <button onclick="switchTab('recycle')" id="tabRecycleBtn">🗑️ 回收站</button>
         </div>
 
-        <!-- ===== Tab1：订单管理 ===== -->
         <div id="tabOrders" class="tab-content">
             <div class="stats" id="statsBar">
                 <span class="stat-item active" data-status="all" onclick="loadOrders('all',this)">全部 <span class="num" id="countAll">0</span></span>
                 <span class="stat-item" data-status="0" onclick="loadOrders('0',this)">⏳ 待付款 <span class="num" id="count0">0</span></span>
-                <span class="stat-item" data-status="1" onclick="loadOrders('1',this)">💰 已付款 <span class="num" id="count1">0</span></span>
-                <span class="stat-item" data-status="2" onclick="loadOrders('2',this)">✅ 已收款 <span class="num" id="count2">0</span></span>
-                <span class="stat-item" data-status="3" onclick="loadOrders('3',this)">📦 已发货 <span class="num" id="count3">0</span></span>
-                <span class="stat-item" data-status="4" onclick="loadOrders('4',this)">❌ 已拒绝 <span class="num" id="count4">0</span></span>
+                <span class="stat-item" data-status="1" onclick="loadOrders('1',this)">💰 已付款待确认 <span class="num" id="count1">0</span></span>
+                <span class="stat-item" data-status="2" onclick="loadOrders('2',this)">✏️ 已修改待确认 <span class="num" id="count2">0</span></span>
+                <span class="stat-item" data-status="3" onclick="loadOrders('3',this)">✅ 已收款 <span class="num" id="count3">0</span></span>
+                <span class="stat-item" data-status="4" onclick="loadOrders('4',this)">📦 已发货 <span class="num" id="count4">0</span></span>
+                <span class="stat-item" data-status="5" onclick="loadOrders('5',this)">❌ 已拒绝 <span class="num" id="count5">0</span></span>
             </div>
             <div id="orderList"></div>
         </div>
 
-        <!-- ===== Tab2：页面设置 ===== -->
         <div id="tabSettings" class="tab-content" style="display:none;">
             <div class="settings-area">
                 <h3 style="margin-bottom:12px;font-size:16px;color:#333;">⚙️ 页面设置</h3>
                 <div class="form-group">
                     <label>选择代理商</label>
                     <select id="settingAgentId">
-                        <option value="1">深圳总仓1001</option>
-                        <option value="2">深圳总仓1002</option>
-                        <option value="3">深圳总仓1003</option>
-                        <option value="4">深圳总仓1004</option>
-                        <option value="5">深圳总仓1005</option>
-                        <option value="6">深圳总仓1006</option>
-                        <option value="7">深圳总仓1007</option>
-                        <option value="8">深圳总仓1008</option>
-                        <option value="9">深圳总仓1009</option>
-                        <option value="10">深圳总仓1010</option>
+                        <option value="1">深圳总仓1001</option><option value="2">深圳总仓1002</option>
+                        <option value="3">深圳总仓1003</option><option value="4">深圳总仓1004</option>
+                        <option value="5">深圳总仓1005</option><option value="6">深圳总仓1006</option>
+                        <option value="7">深圳总仓1007</option><option value="8">深圳总仓1008</option>
+                        <option value="9">深圳总仓1009</option><option value="10">深圳总仓1010</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -144,45 +123,33 @@
                 </div>
                 <div class="form-group">
                     <label>下单注意事项</label>
-                    <textarea id="settingOrderNotice" placeholder="请填写下单注意事项，如：发货时间、物流说明等"></textarea>
+                    <textarea id="settingOrderNotice" placeholder="请填写下单注意事项"></textarea>
                 </div>
                 <button class="btn-save-settings" onclick="saveSettings()">💾 保存设置</button>
             </div>
         </div>
 
-        <!-- ===== Tab3：回收站 ===== -->
         <div id="tabRecycle" class="tab-content" style="display:none;">
-            <div class="stats">
-                <span class="stat-item active" onclick="loadRecycle()">🗑️ 回收站</span>
-            </div>
+            <div class="stats"><span class="stat-item active" onclick="loadRecycle()">🗑️ 回收站</span></div>
             <div id="recycleList"></div>
         </div>
     </div>
 </div>
 
 <script>
-// ============================================================
-// 配置
-// ============================================================
 const API_BASE = 'https://order-api.dingdanguanli.workers.dev';
 const MASTER_PASSWORD = 'Aa7758521';
 
-// ============================================================
-// Toast
-// ============================================================
 function showToast(msg) {
-    const t = document.getElementById('toast');
+    var t = document.getElementById('toast');
     t.textContent = msg;
-    t.classList.add('show');
+    t.className = 'toast show';
     clearTimeout(t._timer);
-    t._timer = setTimeout(() => t.classList.remove('show'), 2500);
+    t._timer = setTimeout(function() { t.className = 'toast'; }, 2500);
 }
 
-// ============================================================
-// 登录
-// ============================================================
 function doLogin() {
-    const pwd = document.getElementById('pwdInput').value.trim();
+    var pwd = document.getElementById('pwdInput').value.trim();
     if (pwd === MASTER_PASSWORD) {
         document.getElementById('loginBox').style.display = 'none';
         document.getElementById('adminPanel').style.display = 'block';
@@ -202,13 +169,9 @@ function doLogout() {
     document.getElementById('loginError').style.display = 'none';
 }
 
-// ============================================================
-// Tab 切换
-// ============================================================
 function switchTab(tab) {
-    document.querySelectorAll('.tab-bar button').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(c => c.style.display = 'none');
-    
+    document.querySelectorAll('.tab-bar button').forEach(function(b) { b.classList.remove('active'); });
+    document.querySelectorAll('.tab-content').forEach(function(c) { c.style.display = 'none'; });
     if (tab === 'orders') {
         document.getElementById('tabOrdersBtn').classList.add('active');
         document.getElementById('tabOrders').style.display = 'block';
@@ -224,456 +187,216 @@ function switchTab(tab) {
     }
 }
 
-// ============================================================
-// 加载订单列表
-// ============================================================
 async function loadOrders(status, el) {
-    document.querySelectorAll('#statsBar .stat-item').forEach(item => item.classList.remove('active'));
+    document.querySelectorAll('#statsBar .stat-item').forEach(function(item) { item.classList.remove('active'); });
     if (el) el.classList.add('active');
-
-    const list = document.getElementById('orderList');
+    var list = document.getElementById('orderList');
     list.innerHTML = '<div class="loading">⏳ 加载中...</div>';
-
     try {
-        const resp = await fetch(`${API_BASE}/api/master/orders?password=${MASTER_PASSWORD}&status=${status}&deleted=0`);
-        const data = await resp.json();
-
-        if (data.code === 401) {
-            showToast('密码错误，请重新登录');
-            doLogout();
-            return;
-        }
-
+        var resp = await fetch(API_BASE + '/api/master/orders?password=' + MASTER_PASSWORD + '&status=' + status + '&deleted=0');
+        var data = await resp.json();
+        if (data.code === 401) { showToast('密码错误'); doLogout(); return; }
         if (data.code === 200 && data.data) {
-            const orders = data.data;
+            var orders = data.data;
             renderOrders(orders);
             updateCounts(orders);
         } else {
             list.innerHTML = '<div class="empty-tip">暂无订单</div>';
         }
-    } catch (e) {
+    } catch(e) {
         list.innerHTML = '<div class="empty-tip">加载失败，请刷新</div>';
         console.error(e);
     }
 }
 
-// ============================================================
-// 渲染订单列表
-// ============================================================
 function renderOrders(orders) {
-    const list = document.getElementById('orderList');
+    var list = document.getElementById('orderList');
     if (!orders || orders.length === 0) {
         list.innerHTML = '<div class="empty-tip">🎉 暂无订单</div>';
         return;
     }
-
-    const statusMap = ['待付款', '已付款（待确认）', '已收款', '已发货', '已拒绝'];
-    const agentNames = {
-        1: '深圳总仓1001',
-        2: '深圳总仓1002',
-        3: '深圳总仓1003',
-        4: '深圳总仓1004',
-        5: '深圳总仓1005',
-        6: '深圳总仓1006',
-        7: '深圳总仓1007',
-        8: '深圳总仓1008',
-        9: '深圳总仓1009',
-        10: '深圳总仓1010'
-    };
-
-    let html = '';
-    orders.forEach(order => {
-        // 根据状态显示不同按钮
-        let actionButtons = '';
-        if (order.status === 2) {
-            // 已收款 → 显示"发货"和"拒绝"
-            actionButtons = `
-                <button class="btn-ship" onclick="shipOrder(${order.id})">📦 发货</button>
-                <button class="btn-reject" onclick="rejectOrder(${order.id})">❌ 拒绝</button>
-            `;
-        } else if (order.status === 0 || order.status === 1) {
-            // 待付款或已付款 → 只显示"拒绝"
-            actionButtons = `
-                <button class="btn-reject" onclick="rejectOrder(${order.id})">❌ 拒绝</button>
-            `;
+    var statusMap = ['待付款', '已付款待确认', '已修改待确认', '已收款', '已发货', '已拒绝'];
+    var agentNames = {1:'深圳总仓1001',2:'深圳总仓1002',3:'深圳总仓1003',4:'深圳总仓1004',5:'深圳总仓1005',6:'深圳总仓1006',7:'深圳总仓1007',8:'深圳总仓1008',9:'深圳总仓1009',10:'深圳总仓1010'};
+    var html = '';
+    orders.forEach(function(order) {
+        var actionButtons = '';
+        if (order.status === 3) {
+            actionButtons = '<button class="btn-ship" onclick="shipOrder(' + order.id + ')">📦 发货</button>';
         }
-
-        // 客户修改标记
-        let modifiedTag = '';
-        if (order.customer_modified === 1) {
-            modifiedTag = '<span style="color:#ff6b00;font-size:12px;background:#fff3cd;padding:2px 8px;border-radius:4px;">✏️ 客户已修改</span>';
+        if (order.status === 0 || order.status === 1 || order.status === 2) {
+            actionButtons = '<button class="btn-reject" onclick="rejectOrder(' + order.id + ')">❌ 拒绝</button>';
         }
-
-        html += `
-            <div class="order-card" data-id="${order.id}">
-                <div class="top">
-                    <div>
-                        <span class="badge status-${order.status}">${statusMap[order.status] || '未知'}</span>
-                        <span class="name">${order.customer_name}</span>
-                        <span class="phone">${order.customer_phone}</span>
-                        <span class="agent-tag">${agentNames[order.agent_id] || '未知'}</span>
-                        ${modifiedTag}
-                    </div>
-                    <span class="time">${order.created_at || ''}</span>
-                </div>
-                <div class="info">
-                    <div>📍 ${order.province || ''}${order.city || ''}${order.district || ''} ${order.detail_address || ''}</div>
-                    <div>📝 ${order.product_note || '无备注'}</div>
-                    ${order.tracking_number ? `<div>📮 运单号：${order.tracking_number}</div>` : ''}
-                    ${order.pickup_code ? `<div>🔑 取件码：${order.pickup_code}</div>` : ''}
-                    ${order.admin_remark ? `<div>💬 备注：${order.admin_remark}</div>` : ''}
-                    ${order.modify_history ? `<div style="color:#ff6b00;font-size:12px;">📝 修改记录：${order.modify_history}</div>` : ''}
-                </div>
-                <div class="bottom">
-                    <select onchange="updateOrder(${order.id}, 'status', this.value)">
-                        <option value="0" ${order.status === 0 ? 'selected' : ''}>待付款</option>
-                        <option value="1" ${order.status === 1 ? 'selected' : ''}>已付款</option>
-                        <option value="2" ${order.status === 2 ? 'selected' : ''}>已收款</option>
-                        <option value="3" ${order.status === 3 ? 'selected' : ''}>已发货</option>
-                        <option value="4" ${order.status === 4 ? 'selected' : ''}>已拒绝</option>
-                    </select>
-                    <input type="text" placeholder="运单号" value="${order.tracking_number || ''}" 
-                           onchange="updateOrder(${order.id}, 'tracking_number', this.value)">
-                    <input type="text" placeholder="取件码" value="${order.pickup_code || ''}" 
-                           onchange="updateOrder(${order.id}, 'pickup_code', this.value)">
-                    <input type="text" placeholder="备注" value="${order.admin_remark || ''}" 
-                           onchange="updateOrder(${order.id}, 'admin_remark', this.value)">
-                    <button class="btn-save" onclick="updateOrder(${order.id})">💾 保存</button>
-                    ${actionButtons}
-                    <button class="btn-danger" onclick="deleteOrder(${order.id})">🗑️ 删除</button>
-                </div>
-            </div>
-        `;
+        var modifiedTag = order.customer_modified === 1 ? '<span style="color:#ff6b00;font-size:12px;background:#fff3cd;padding:2px 8px;border-radius:4px;">✏️ 客户已修改</span>' : '';
+        html += '<div class="order-card" data-id="' + order.id + '"><div class="top"><div><span class="badge s' + order.status + '">' + statusMap[order.status] + '</span><span class="name">' + order.customer_name + '</span><span class="phone">' + order.customer_phone + '</span><span class="agent-tag">' + agentNames[order.agent_id] + '</span>' + modifiedTag + '</div><span class="time">' + (order.created_at || '') + '</span></div><div class="info"><div>📍 ' + (order.province||'') + (order.city||'') + (order.district||'') + ' ' + (order.detail_address||'') + '</div><div>📝 ' + (order.product_note || '无备注') + '</div>' + (order.tracking_number ? '<div>📮 运单号：' + order.tracking_number + '</div>' : '') + (order.pickup_code ? '<div>🔑 取件码：' + order.pickup_code + '</div>' : '') + (order.admin_remark ? '<div>💬 备注：' + order.admin_remark + '</div>' : '') + '</div><div class="bottom"><select onchange="updateOrder(' + order.id + ', \'status\', this.value)"><option value="0" ' + (order.status===0?'selected':'') + '>待付款</option><option value="1" ' + (order.status===1?'selected':'') + '>已付款待确认</option><option value="2" ' + (order.status===2?'selected':'') + '>已修改待确认</option><option value="3" ' + (order.status===3?'selected':'') + '>已收款</option><option value="4" ' + (order.status===4?'selected':'') + '>已发货</option><option value="5" ' + (order.status===5?'selected':'') + '>已拒绝</option></select><input type="text" placeholder="运单号" value="' + (order.tracking_number||'') + '" onchange="updateOrder(' + order.id + ', \'tracking_number\', this.value)"><input type="text" placeholder="取件码" value="' + (order.pickup_code||'') + '" onchange="updateOrder(' + order.id + ', \'pickup_code\', this.value)"><input type="text" placeholder="备注" value="' + (order.admin_remark||'') + '" onchange="updateOrder(' + order.id + ', \'admin_remark\', this.value)"><button class="btn-save" onclick="updateOrder(' + order.id + ')">💾 保存</button>' + actionButtons + '<button class="btn-danger" onclick="deleteOrder(' + order.id + ')">🗑️ 删除</button></div></div>';
     });
     list.innerHTML = html;
 }
 
-// ============================================================
-// 更新订单（通用）
-// ============================================================
 async function updateOrder(id, field, value) {
-    if (field) {
-        clearTimeout(window._updateTimer);
-        window._updateTimer = setTimeout(async () => {
-            await doUpdateOrder(id);
-        }, 500);
-        return;
-    }
-    await doUpdateOrder(id);
+    if (field) { clearTimeout(window._updateTimer); window._updateTimer = setTimeout(function() { doUpdateOrder(id); }, 500); return; }
+    doUpdateOrder(id);
 }
 
 async function doUpdateOrder(id) {
-    const card = document.querySelector(`.order-card[data-id="${id}"]`);
+    var card = document.querySelector('.order-card[data-id="' + id + '"]');
     if (!card) return;
-
-    const select = card.querySelector('select');
-    const inputs = card.querySelectorAll('input');
-    const status = parseInt(select.value);
-    const trackingNumber = inputs[0].value.trim();
-    const pickupCode = inputs[1].value.trim();
-    const adminRemark = inputs[2].value.trim();
-
-    const btn = card.querySelector('.btn-save');
+    var select = card.querySelector('select');
+    var inputs = card.querySelectorAll('input');
+    var status = parseInt(select.value);
+    var trackingNumber = inputs[0].value.trim();
+    var pickupCode = inputs[1].value.trim();
+    var adminRemark = inputs[2].value.trim();
+    var btn = card.querySelector('.btn-save');
     btn.textContent = '⏳';
     btn.disabled = true;
-
     try {
-        const resp = await fetch(`${API_BASE}/api/master/order/update`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                password: MASTER_PASSWORD,
-                id: id,
-                status: status,
-                trackingNumber: trackingNumber,
-                pickupCode: pickupCode,
-                adminRemark: adminRemark
-            })
+        var resp = await fetch(API_BASE + '/api/master/order/update', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password: MASTER_PASSWORD, id: id, status: status, trackingNumber: trackingNumber, pickupCode: pickupCode, adminRemark: adminRemark })
         });
-        const data = await resp.json();
-
-        if (data.code === 200) {
-            showToast('✅ 保存成功');
-            loadOrders('all');
-        } else {
-            showToast(data.msg || '保存失败');
-            btn.textContent = '💾 保存';
-            btn.disabled = false;
-        }
-    } catch (e) {
-        showToast('网络异常，请重试');
-        btn.textContent = '💾 保存';
-        btn.disabled = false;
-        console.error(e);
-    }
+        var data = await resp.json();
+        if (data.code === 200) { showToast('✅ 保存成功'); loadOrders('all'); }
+        else { showToast(data.msg || '保存失败'); btn.textContent = '💾 保存'; btn.disabled = false; }
+    } catch(e) { showToast('网络异常，请重试'); btn.textContent = '💾 保存'; btn.disabled = false; }
 }
 
-// ============================================================
-// 发货
-// ============================================================
 async function shipOrder(id) {
-    const card = document.querySelector(`.order-card[data-id="${id}"]`);
-    const inputs = card.querySelectorAll('input');
-    const trackingNumber = inputs[0].value.trim();
-    const pickupCode = inputs[1].value.trim();
-    const adminRemark = inputs[2].value.trim();
-
-    if (!trackingNumber) {
-        showToast('请先填写运单号！');
-        return;
-    }
-
+    var card = document.querySelector('.order-card[data-id="' + id + '"]');
+    var inputs = card.querySelectorAll('input');
+    var trackingNumber = inputs[0].value.trim();
+    var pickupCode = inputs[1].value.trim();
+    var adminRemark = inputs[2].value.trim();
+    if (!trackingNumber) { showToast('请先填写运单号！'); return; }
     if (!confirm('确认发货吗？')) return;
-
     try {
-        const resp = await fetch(`${API_BASE}/api/master/order/ship`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                password: MASTER_PASSWORD,
-                id: id,
-                trackingNumber: trackingNumber,
-                pickupCode: pickupCode,
-                adminRemark: adminRemark
-            })
+        var resp = await fetch(API_BASE + '/api/master/order/ship', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password: MASTER_PASSWORD, id: id, trackingNumber: trackingNumber, pickupCode: pickupCode, adminRemark: adminRemark })
         });
-        const data = await resp.json();
-        if (data.code === 200) {
-            showToast('✅ 发货成功！');
-            loadOrders('all');
-        } else {
-            showToast(data.msg || '发货失败');
-        }
-    } catch (e) {
-        showToast('网络异常，请重试');
-    }
+        var data = await resp.json();
+        if (data.code === 200) { showToast('✅ 发货成功！'); loadOrders('all'); }
+        else { showToast(data.msg || '发货失败'); }
+    } catch(e) { showToast('网络异常，请重试'); }
 }
 
-// ============================================================
-// 拒绝订单
-// ============================================================
 async function rejectOrder(id) {
     if (!confirm('确认拒绝此订单吗？')) return;
-
     try {
-        const resp = await fetch(`${API_BASE}/api/master/order/reject`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                password: MASTER_PASSWORD,
-                id: id
-            })
+        var resp = await fetch(API_BASE + '/api/master/order/reject', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password: MASTER_PASSWORD, id: id })
         });
-        const data = await resp.json();
-        if (data.code === 200) {
-            showToast('✅ 已拒绝');
-            loadOrders('all');
-        } else {
-            showToast(data.msg || '操作失败');
-        }
-    } catch (e) {
-        showToast('网络异常，请重试');
-    }
+        var data = await resp.json();
+        if (data.code === 200) { showToast('✅ 已拒绝'); loadOrders('all'); }
+        else { showToast(data.msg || '操作失败'); }
+    } catch(e) { showToast('网络异常，请重试'); }
 }
 
-// ============================================================
-// 删除订单（软删除，移入回收站）
-// ============================================================
 async function deleteOrder(id) {
     if (!confirm('确定要删除此订单吗？将移入回收站')) return;
-
     try {
-        const resp = await fetch(`${API_BASE}/api/master/order/delete`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                password: MASTER_PASSWORD,
-                id: id
-            })
+        var resp = await fetch(API_BASE + '/api/master/order/delete', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password: MASTER_PASSWORD, id: id })
         });
-        const data = await resp.json();
-        if (data.code === 200) {
-            showToast('✅ 已移入回收站');
-            loadOrders('all');
-        } else {
-            showToast(data.msg || '删除失败');
-        }
-    } catch (e) {
-        showToast('网络异常，请重试');
-    }
+        var data = await resp.json();
+        if (data.code === 200) { showToast('✅ 已移入回收站'); loadOrders('all'); }
+        else { showToast(data.msg || '删除失败'); }
+    } catch(e) { showToast('网络异常，请重试'); }
 }
 
-// ============================================================
-// 回收站
-// ============================================================
 async function loadRecycle() {
-    const list = document.getElementById('recycleList');
+    var list = document.getElementById('recycleList');
     list.innerHTML = '<div class="loading">⏳ 加载中...</div>';
-
     try {
-        const resp = await fetch(`${API_BASE}/api/master/orders?password=${MASTER_PASSWORD}&deleted=1`);
-        const data = await resp.json();
-
+        var resp = await fetch(API_BASE + '/api/master/orders?password=' + MASTER_PASSWORD + '&deleted=1');
+        var data = await resp.json();
         if (data.code === 200 && data.data) {
-            const orders = data.data;
-            if (orders.length === 0) {
-                list.innerHTML = '<div class="empty-tip">🗑️ 回收站为空</div>';
-                return;
-            }
-            let html = '';
-            orders.forEach(order => {
-                html += `
-                    <div class="order-card">
-                        <div class="top">
-                            <div>
-                                <span class="name">${order.customer_name}</span>
-                                <span class="phone">${order.customer_phone}</span>
-                            </div>
-                            <span class="time">${order.created_at || ''}</span>
-                        </div>
-                        <div class="info">
-                            <div>📍 ${order.province || ''}${order.city || ''}${order.district || ''} ${order.detail_address || ''}</div>
-                            <div>📝 ${order.product_note || '无备注'}</div>
-                        </div>
-                        <div class="bottom">
-                            <button class="btn-save" onclick="restoreOrder(${order.id})">↩️ 恢复</button>
-                            <button class="btn-danger" onclick="permanentDelete(${order.id})">🔥 彻底删除</button>
-                        </div>
-                    </div>
-                `;
+            var orders = data.data;
+            if (orders.length === 0) { list.innerHTML = '<div class="empty-tip">🗑️ 回收站为空</div>'; return; }
+            var html = '';
+            orders.forEach(function(order) {
+                html += '<div class="order-card"><div class="top"><div><span class="name">' + order.customer_name + '</span><span class="phone">' + order.customer_phone + '</span></div><span class="time">' + (order.created_at||'') + '</span></div><div class="info"><div>📍 ' + (order.province||'') + (order.city||'') + (order.district||'') + ' ' + (order.detail_address||'') + '</div><div>📝 ' + (order.product_note||'无备注') + '</div></div><div class="bottom"><button class="btn-save" onclick="restoreOrder(' + order.id + ')">↩️ 恢复</button><button class="btn-danger" onclick="permanentDelete(' + order.id + ')">🔥 彻底删除</button></div></div>';
             });
             list.innerHTML = html;
-        } else {
-            list.innerHTML = '<div class="empty-tip">回收站加载失败</div>';
-        }
-    } catch (e) {
-        list.innerHTML = '<div class="empty-tip">加载失败，请刷新</div>';
-    }
+        } else { list.innerHTML = '<div class="empty-tip">回收站加载失败</div>'; }
+    } catch(e) { list.innerHTML = '<div class="empty-tip">加载失败，请刷新</div>'; }
 }
 
-// ============================================================
-// 恢复订单
-// ============================================================
 async function restoreOrder(id) {
     if (!confirm('确定要恢复此订单吗？')) return;
     try {
-        const resp = await fetch(`${API_BASE}/api/master/order/restore`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+        var resp = await fetch(API_BASE + '/api/master/order/restore', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ password: MASTER_PASSWORD, id: id })
         });
-        const data = await resp.json();
-        if (data.code === 200) {
-            showToast('✅ 已恢复');
-            loadRecycle();
-        } else {
-            showToast(data.msg || '恢复失败');
-        }
-    } catch (e) {
-        showToast('网络异常，请重试');
-    }
+        var data = await resp.json();
+        if (data.code === 200) { showToast('✅ 已恢复'); loadRecycle(); }
+        else { showToast(data.msg || '恢复失败'); }
+    } catch(e) { showToast('网络异常，请重试'); }
 }
 
-// ============================================================
-// 彻底删除
-// ============================================================
 async function permanentDelete(id) {
     if (!confirm('⚠️ 确定要彻底删除此订单吗？此操作不可恢复！')) return;
     try {
-        const resp = await fetch(`${API_BASE}/api/master/order/permanent-delete`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+        var resp = await fetch(API_BASE + '/api/master/order/permanent-delete', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ password: MASTER_PASSWORD, id: id })
         });
-        const data = await resp.json();
-        if (data.code === 200) {
-            showToast('✅ 已彻底删除');
-            loadRecycle();
-        } else {
-            showToast(data.msg || '删除失败');
-        }
-    } catch (e) {
-        showToast('网络异常，请重试');
-    }
+        var data = await resp.json();
+        if (data.code === 200) { showToast('✅ 已彻底删除'); loadRecycle(); }
+        else { showToast(data.msg || '删除失败'); }
+    } catch(e) { showToast('网络异常，请重试'); }
 }
 
-// ============================================================
-// 更新统计数
-// ============================================================
 function updateCounts(orders) {
-    const counts = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0 };
-    orders.forEach(o => {
-        if (counts[o.status] !== undefined) counts[o.status]++;
-    });
+    var counts = {0:0,1:0,2:0,3:0,4:0,5:0};
+    orders.forEach(function(o) { if (counts[o.status] !== undefined) counts[o.status]++; });
     document.getElementById('countAll').textContent = orders.length;
     document.getElementById('count0').textContent = counts[0];
     document.getElementById('count1').textContent = counts[1];
     document.getElementById('count2').textContent = counts[2];
     document.getElementById('count3').textContent = counts[3];
     document.getElementById('count4').textContent = counts[4];
+    document.getElementById('count5').textContent = counts[5];
 }
 
-// ============================================================
-// 页面设置
-// ============================================================
 async function loadSettings() {
-    const agentId = document.getElementById('settingAgentId').value;
+    var agentId = document.getElementById('settingAgentId').value;
     try {
-        const resp = await fetch(`${API_BASE}/api/agent/config?agentId=${agentId}`);
-        const data = await resp.json();
+        var resp = await fetch(API_BASE + '/api/agent/config?agentId=' + agentId);
+        var data = await resp.json();
         if (data.code === 200) {
             document.getElementById('settingStockImage').value = data.data.stock_image_url || '';
             document.getElementById('settingOrderNotice').value = data.data.order_notice || '';
             updateStockPreview(data.data.stock_image_url || '');
         }
-    } catch (e) {
-        console.error(e);
-    }
+    } catch(e) { console.error(e); }
 }
 
 function updateStockPreview(url) {
-    const preview = document.getElementById('stockPreview');
-    if (url) {
-        preview.innerHTML = `<img src="${url}" class="preview-img" alt="库存图片预览" onerror="this.style.display='none'">`;
-    } else {
-        preview.innerHTML = '';
-    }
+    var preview = document.getElementById('stockPreview');
+    preview.innerHTML = url ? '<img src="' + url + '" class="preview-img" onerror="this.style.display=\'none\'">' : '';
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('settingStockImage').addEventListener('input', function() {
-        updateStockPreview(this.value);
-    });
-    document.getElementById('settingAgentId').addEventListener('change', function() {
-        loadSettings();
-    });
+    document.getElementById('settingStockImage').addEventListener('input', function() { updateStockPreview(this.value); });
+    document.getElementById('settingAgentId').addEventListener('change', function() { loadSettings(); });
 });
 
 async function saveSettings() {
-    const agentId = document.getElementById('settingAgentId').value;
-    const stockImageUrl = document.getElementById('settingStockImage').value.trim();
-    const orderNotice = document.getElementById('settingOrderNotice').value.trim();
-
+    var agentId = document.getElementById('settingAgentId').value;
+    var stockImageUrl = document.getElementById('settingStockImage').value.trim();
+    var orderNotice = document.getElementById('settingOrderNotice').value.trim();
     try {
-        const resp = await fetch(`${API_BASE}/api/master/settings/update`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                password: MASTER_PASSWORD,
-                agentId: parseInt(agentId),
-                stockImageUrl: stockImageUrl,
-                orderNotice: orderNotice
-            })
+        var resp = await fetch(API_BASE + '/api/master/settings/update', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password: MASTER_PASSWORD, agentId: parseInt(agentId), stockImageUrl: stockImageUrl, orderNotice: orderNotice })
         });
-        const data = await resp.json();
-        if (data.code === 200) {
-            showToast('✅ 设置已保存');
-        } else {
-            showToast(data.msg || '保存失败');
-        }
-    } catch (e) {
-        showToast('网络异常，请重试');
-    }
+        var data = await resp.json();
+        if (data.code === 200) { showToast('✅ 设置已保存'); }
+        else { showToast(data.msg || '保存失败'); }
+    } catch(e) { showToast('网络异常，请重试'); }
 }
 </script>
 </body>
