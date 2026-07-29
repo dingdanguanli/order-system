@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>📦 快递查询</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, Arial, sans-serif; background: #f5f6fa; padding: 16px; min-height: 100vh; }
+        .container { max-width: 480px; margin: 0 auto; }
+        .header { text-align: center; padding: 16px 0 12px; }
+        .header h1 { font-size: 26px; color: #333; }
+        .header .agent-name { color: #4a6cf7; font-weight: 600; font-size: 15px; display: block; margin-top: 4px; }
+        .tabs { display: flex; gap: 8px; margin-bottom: 16px; background: white; border-radius: 12px; padding: 4px; }
+        .tabs button { flex: 1; padding: 10px; border: none; border-radius: 10px; font-size: 15px; font-weight: 500; cursor: pointer; background: transparent; color: #999; }
+        .tabs button.active { background: #4a6cf7; color: white; }
+        .card { background: white; border-radius: 16px; padding: 20px; margin-bottom: 16px; display: none; }
+        .card.active { display: block; }
+        .form-group { margin-bottom: 14px; }
+        .form-group label { display: block; font-size: 14px; color: #666; margin-bottom: 4px; font-weight: 500; }
+        .form-group input, .form-group textarea { width: 100%; padding: 12px 14px; border: 1px solid #e0e0e0; border-radius: 10px; font-size: 16px; background: #fafafa; font-family: inherit; }
+        .form-group input:focus, .form-group textarea:focus { outline: none; border-color: #4a6cf7; background: white; }
+        .form-group textarea { resize: vertical; min-height: 60px; }
+        .btn { width: 100%; padding: 14px; border: none; border-radius: 10px; font-size: 17px; font-weight: 600; cursor: pointer; }
+        .btn-primary { background: #4a6cf7; color: white; }
+        .btn-success { background: #22c55e; color: white; }
+        .toast { position: fixed; top: 20%; left: 50%; transform: translateX(-50%); background: rgba(0,0,0,0.78); color: white; padding: 12px 24px; border-radius: 10px; font-size: 15px; z-index: 999; display: none; max-width: 80%; text-align: center; }
+        .toast.show { display: block; }
+        .order-item { border: 1px solid #eee; border-radius: 12px; padding: 14px; margin-bottom: 12px; }
+        .order-item .top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; }
+        .order-item .top .status { font-size: 12px; padding: 2px 12px; border-radius: 20px; }
+        .order-item .top .status.pending { background: #fff3cd; color: #856404; }
+        .order-item .top .status.shipped { background: #d4edda; color: #155724; }
+        .order-item .top .status.rejected { background: #f8d7da; color: #721c24; }
+        .order-item .info { font-size: 14px; color: #666; line-height: 1.8; margin-top: 6px; }
+        .order-item .info .pickup { font-size: 20px; font-weight: 700; color: #ff6b00; }
+        .order-item .info .tracking { color: #333; font-weight: 500; }
+        .order-item .remark { margin-top: 8px; padding-top: 8px; border-top: 1px dashed #eee; color: #888; font-size: 13px; }
+        .empty { text-align: center; color: #bbb; padding: 30px 0; }
+        .contact-area { margin-top: 20px; padding-top: 16px; border-top: 1px solid #eee; text-align: center; }
+        .contact-area .qq-btn { display: inline-block; padding: 10px 28px; background: #4a6cf7; color: white; border-radius: 10px; text-decoration: none; font-weight: 500; font-size: 15px; }
+        .contact-area .wechat-info { margin-top: 8px; color: #666; font-size: 14px; }
+        .contact-area .qr-img { max-width: 140px; margin-top: 8px; border-radius: 8px; }
+        .stock-image { width: 100%; border-radius: 12px; margin-bottom: 16px; }
+        .order-notice { background: #f8f9fa; border-radius: 10px; padding: 12px 16px; margin-top: 16px; font-size: 14px; color: #666; line-height: 1.8; border-left: 3px solid #4a6cf7; }
+        .copy-btn { background: none; border: 1px solid #ddd; padding: 2px 12px; border-radius: 4px; font-size: 12px; cursor: pointer; color: #666; }
+    </style>
+</head>
+<body>
+
+<div id="toast" class="toast"></div>
+
+<div class="container">
+    <div class="header">
+        <h1>📦 快递查询</h1>
+        <span class="agent-name" id="agentDisplay">加载中...</span>
+    </div>
+
+    <div class="tabs">
+        <button class="active" onclick="switchTab('order')">📝 下单</button>
+        <button onclick="switchTab('query')">🔍 查订单</button>
+    </div>
+
+    <!-- 下单 -->
+    <div id="tabOrder" class="card active">
+        <div id="stockImageArea"></div>
+        <div class="form-group">
+            <label>收件人姓名 *</label>
+            <input id="oName" placeholder="请输入姓名">
+        </div>
+        <div class="form-group">
+            <label>手机号码 *</label>
+            <input id="oPhone" type="tel" placeholder="请输入手机号">
+        </div>
+        <div class="form-group">
+            <label>收货地址 *</label>
+            <input id="oAddress" placeholder="请输入详细地址">
+        </div>
+        <div class="form-group">
+            <label>商品备注</label>
+            <textarea id="oNote" placeholder="如：红色款 M码 加急"></textarea>
+        </div>
+        <button class="btn btn-success" onclick="doOrder()">📝 提交订单</button>
+        <div id="orderNoticeArea"></div>
+        <div class="contact-area">
+            <p style="color:#999;font-size:14px;margin-bottom:8px;">💬 联系客服</p>
+            <div id="contactContent">加载中...</div>
+        </div>
+    </div>
+
+    <!-- 查询 -->
+    <div id="tabQuery" class="card">
+        <div class="form-group">
+            <label>输入手机号查订单 *</label>
+            <input id="qPhone" type="tel" placeholder="请输入下单时的手机号" onkeyup="if(event.keyCode===13) doQuery()">
+        </div>
+        <button class="btn btn-primary" onclick="doQuery()">🔍 查询我的订单</button>
+        <div id="orderList" style="margin-top:16px;"></div>
+    </div>
+</div>
+
+<script>
+// ⚠️ 重要：把你的 Worker 地址填在这里！
+const API_BASE = 'https://order-api.dingdanguanli.workers.dev';
+
+let currentAgentId = 1;
+let agentConfig = {};
+
+function getAgentId() {
+    const params = new URLSearchParams(window.location.search);
+    return parseInt(params.get('agent')) || 1;
+}
+
+function showToast(msg) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+function switchTab(tab) {
+    document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
+    if (tab === 'order') {
+        document.querySelector('.tabs button:first-child').classList.add('active');
+        document.getElementById('tabOrder').classList.add('active');
+    } else {
+        document.querySelector('.tabs button:last-child').classList.add('active');
+        document.getElementById('tabQuery').classList.add('active');
+    }
+}
+
+async function loadAgentConfig() {
+    currentAgentId = getAgentId();
+    try {
+        const resp = await fetch(`${API_BASE}/api/agent/config?agentId=${currentAgentId}`);
+        const data = await resp.json();
+        if (data.code === 200) {
+            agentConfig = data.data;
+            document.getElementById('agentDisplay').textContent = '🏪 ' + agentConfig.agent_name;
+            
+            let html = '';
+            if (agentConfig.qq) html += `<a href="http://wpa.qq.com/msgrd?v=3&uin=${agentConfig.qq}&site=qq&menu=yes" target="_blank" class="qq-btn">💬 QQ咨询</a>`;
+            if (agentConfig.wechat) html += `<div class="wechat-info">📱 微信号：${agentConfig.wechat} <button class="copy-btn" onclick="copyText('${agentConfig.wechat}')">复制</button></div>`;
+            if (agentConfig.qr_code_url) html += `<div><img src="${agentConfig.qr_code_url}" class="qr-img" alt="微信二维码" onerror="this.style.display='none'"></div>`;
+            if (agentConfig.welcome_text) html += `<div style="margin-top:8px;color:#999;font-size:13px;">${agentConfig.welcome_text}</div>`;
+            document.getElementById('contactContent').innerHTML = html || '<span style="color:#ccc;">暂无客服信息</span>';
+            
+            document.getElementById('stockImageArea').innerHTML = agentConfig.stock_image_url ? 
+                `<img src="${agentConfig.stock_image_url}" class="stock-image" alt="库存图片" onerror="this.style.display='none'">` : '';
+            
+            document.getElementById('orderNoticeArea').innerHTML = agentConfig.order_notice ? 
+                `<div class="order-notice">📌 <strong>下单须知</strong><br>${agentConfig.order_notice.replace(/\n/g, '<br>')}</div>` : '';
+        }
+    } catch(e) { console.error(e); }
+}
+
+function copyText(text) {
+    if (navigator.clipboard) { navigator.clipboard.writeText(text).then(() => showToast('✅ 已复制')); } 
+    else { const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); showToast('✅ 已复制'); }
+}
+
+async function doOrder() {
+    const name = document.getElementById('oName').value.trim();
+    const phone = document.getElementById('oPhone').value.trim();
+    const address = document.getElementById('oAddress').value.trim();
+    const note = document.getElementById('oNote').value.trim();
+    if (!name || !phone || !address) { showToast('请填写完整信息'); return; }
+    if (!/^1\d{10}$/.test(phone)) { showToast('请输入正确的手机号'); return; }
+    try {
+        const resp = await fetch(`${API_BASE}/api/order/create`, {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ customerName: name, customerPhone: phone, customerAddress: address, productNote: note, agentId: currentAgentId })
+        });
+        const data = await resp.json();
+        if (data.code === 200) { showToast('✅ 下单成功！'); document.getElementById('oName').value = ''; document.getElementById('oPhone').value = ''; document.getElementById('oAddress').value = ''; document.getElementById('oNote').value = ''; } 
+        else { showToast(data.msg || '下单失败'); }
+    } catch(e) { showToast('网络异常，请重试'); }
+}
+
+async function doQuery() {
+    const phone = document.getElementById('qPhone').value.trim();
+    if (!phone) { showToast('请输入手机号'); return; }
+    if (!/^1\d{10}$/.test(phone)) { showToast('请输入正确的手机号'); return; }
+    const list = document.getElementById('orderList');
+    list.innerHTML = '<div style="text-align:center;color:#999;padding:20px;">⏳ 查询中...</div>';
+    try {
+        const resp = await fetch(`${API_BASE}/api/order/query?phone=${encodeURIComponent(phone)}`);
+        const data = await resp.json();
+        if (data.code === 200 && data.data && data.data.length > 0) {
+            const orders = data.data;
+            const statusMap = ['待处理', '已发货', '已拒绝'];
+            const statusClass = ['pending', 'shipped', 'rejected'];
+            let html = '<div style="font-size:14px;color:#666;margin-bottom:12px;">共 ' + orders.length + ' 个订单</div>';
+            orders.forEach(o => {
+                html += `<div class="order-item">
+                    <div class="top"><span><span class="status ${statusClass[o.status] || 'pending'}">${statusMap[o.status] || '未知'}</span> <strong>${o.customer_name}</strong></span>
+                    <span style="color:#999;font-size:12px;">${o.created_at || ''}</span></div>
+                    <div class="info"><div>📦 ${o.product_note || '无备注'}</div>
+                    <div>📮 运单号：<span class="tracking">${o.tracking_number || '未录入'}</span></div>
+                    <div>🔑 取件码：<span class="pickup">${o.pickup_code || '暂无'}</span></div></div>
+                    ${o.admin_remark ? `<div class="remark">💬 ${o.admin_remark}</div>` : ''}
+                </div>`;
+            });
+            list.innerHTML = html;
+        } else { list.innerHTML = '<div class="empty">📭 暂无订单</div>'; }
+    } catch(e) { list.innerHTML = '<div class="empty">网络异常，请刷新重试</div>'; }
+}
+
+document.addEventListener('DOMContentLoaded', loadAgentConfig);
+</script>
+</body>
+</html>
