@@ -39,13 +39,16 @@
         .order-card .bottom input { padding: 6px 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; background: white; flex: 1; min-width: 70px; }
         .order-card .bottom input:focus { outline: none; border-color: #4a6cf7; }
         .order-card .bottom .btn-save { padding: 6px 16px; background: #4a6cf7; color: white; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; }
+        .order-card .bottom .btn-ship { padding: 6px 16px; background: #22c55e; color: white; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; }
+        .order-card .bottom .btn-reject { padding: 6px 16px; background: #ff6b6b; color: white; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; }
         .order-card .bottom .btn-danger { padding: 6px 16px; background: #ff6b6b; color: white; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; }
 
         .badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; }
-        .badge.pending { background: #fff3cd; color: #856404; }
-        .badge.shipped { background: #d4edda; color: #155724; }
-        .badge.rejected { background: #f8d7da; color: #721c24; }
-        .pickup-highlight { color: #ff6b00; font-weight: 700; font-size: 16px; }
+        .badge.status-0 { background: #fff3cd; color: #856404; }
+        .badge.status-1 { background: #cce5ff; color: #004085; }
+        .badge.status-2 { background: #d4edda; color: #155724; }
+        .badge.status-3 { background: #d4edda; color: #155724; }
+        .badge.status-4 { background: #f8d7da; color: #721c24; }
         .agent-tag { font-size: 11px; color: #999; background: #f0f0f0; padding: 1px 10px; border-radius: 12px; }
 
         .empty-tip, .loading { text-align: center; color: #ccc; padding: 30px 0; font-size: 14px; }
@@ -64,6 +67,7 @@
         .settings-area .form-group textarea { min-height: 80px; resize: vertical; }
         .settings-area .btn-save-settings { padding: 10px 24px; background: #22c55e; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; }
         .settings-area .preview-img { max-width: 100%; max-height: 150px; border-radius: 8px; margin-top: 6px; border: 1px solid #eee; }
+        .settings-hint { font-size: 12px; color: #999; margin-top: 4px; }
     </style>
 </head>
 <body>
@@ -104,9 +108,11 @@
         <div id="tabOrders" class="tab-content">
             <div class="stats" id="statsBar">
                 <span class="stat-item active" data-status="all" onclick="loadOrders('all',this)">全部 <span class="num" id="countAll">0</span></span>
-                <span class="stat-item" data-status="0" onclick="loadOrders('0',this)">⏳ 待处理 <span class="num" id="count0">0</span></span>
-                <span class="stat-item" data-status="1" onclick="loadOrders('1',this)">✅ 已发货 <span class="num" id="count1">0</span></span>
-                <span class="stat-item" data-status="2" onclick="loadOrders('2',this)">❌ 已拒绝 <span class="num" id="count2">0</span></span>
+                <span class="stat-item" data-status="0" onclick="loadOrders('0',this)">⏳ 待付款 <span class="num" id="count0">0</span></span>
+                <span class="stat-item" data-status="1" onclick="loadOrders('1',this)">💰 已付款 <span class="num" id="count1">0</span></span>
+                <span class="stat-item" data-status="2" onclick="loadOrders('2',this)">✅ 已收款 <span class="num" id="count2">0</span></span>
+                <span class="stat-item" data-status="3" onclick="loadOrders('3',this)">📦 已发货 <span class="num" id="count3">0</span></span>
+                <span class="stat-item" data-status="4" onclick="loadOrders('4',this)">❌ 已拒绝 <span class="num" id="count4">0</span></span>
             </div>
             <div id="orderList"></div>
         </div>
@@ -131,9 +137,10 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>库存图片 URL</label>
-                    <input id="settingStockImage" placeholder="https://example.com/stock.jpg">
+                    <label>📦 库存图片 URL（所有代理共用）</label>
+                    <input id="settingStockImage" placeholder="https://imgse.com/xxx.jpg">
                     <div id="stockPreview"></div>
+                    <div class="settings-hint">去图床（如 imgse.com）上传图片，复制直链粘贴到这里</div>
                 </div>
                 <div class="form-group">
                     <label>下单注意事项</label>
@@ -155,7 +162,7 @@
 
 <script>
 // ============================================================
-// 配置 - 总管理员密码
+// 配置
 // ============================================================
 const API_BASE = 'https://order-api.dingdanguanli.workers.dev';
 const MASTER_PASSWORD = 'Aa7758521';
@@ -239,7 +246,7 @@ async function loadOrders(status, el) {
 
         if (data.code === 200 && data.data) {
             const orders = data.data;
-            renderOrders(orders, status);
+            renderOrders(orders);
             updateCounts(orders);
         } else {
             list.innerHTML = '<div class="empty-tip">暂无订单</div>';
@@ -250,15 +257,17 @@ async function loadOrders(status, el) {
     }
 }
 
-function renderOrders(orders, status) {
+// ============================================================
+// 渲染订单列表
+// ============================================================
+function renderOrders(orders) {
     const list = document.getElementById('orderList');
     if (!orders || orders.length === 0) {
         list.innerHTML = '<div class="empty-tip">🎉 暂无订单</div>';
         return;
     }
 
-    const statusMap = ['待处理', '已发货', '已拒绝'];
-    const statusClass = ['pending', 'shipped', 'rejected'];
+    const statusMap = ['待付款', '已付款（待确认）', '已收款', '已发货', '已拒绝'];
     const agentNames = {
         1: '深圳总仓1001',
         2: '深圳总仓1002',
@@ -274,26 +283,54 @@ function renderOrders(orders, status) {
 
     let html = '';
     orders.forEach(order => {
+        // 根据状态显示不同按钮
+        let actionButtons = '';
+        if (order.status === 2) {
+            // 已收款 → 显示"发货"和"拒绝"
+            actionButtons = `
+                <button class="btn-ship" onclick="shipOrder(${order.id})">📦 发货</button>
+                <button class="btn-reject" onclick="rejectOrder(${order.id})">❌ 拒绝</button>
+            `;
+        } else if (order.status === 0 || order.status === 1) {
+            // 待付款或已付款 → 只显示"拒绝"
+            actionButtons = `
+                <button class="btn-reject" onclick="rejectOrder(${order.id})">❌ 拒绝</button>
+            `;
+        }
+
+        // 客户修改标记
+        let modifiedTag = '';
+        if (order.customer_modified === 1) {
+            modifiedTag = '<span style="color:#ff6b00;font-size:12px;background:#fff3cd;padding:2px 8px;border-radius:4px;">✏️ 客户已修改</span>';
+        }
+
         html += `
             <div class="order-card" data-id="${order.id}">
                 <div class="top">
                     <div>
-                        <span class="badge ${statusClass[order.status] || 'pending'}">${statusMap[order.status] || '未知'}</span>
+                        <span class="badge status-${order.status}">${statusMap[order.status] || '未知'}</span>
                         <span class="name">${order.customer_name}</span>
                         <span class="phone">${order.customer_phone}</span>
                         <span class="agent-tag">${agentNames[order.agent_id] || '未知'}</span>
+                        ${modifiedTag}
                     </div>
                     <span class="time">${order.created_at || ''}</span>
                 </div>
                 <div class="info">
-                    <div>📍 ${order.customer_address}</div>
+                    <div>📍 ${order.province || ''}${order.city || ''}${order.district || ''} ${order.detail_address || ''}</div>
                     <div>📝 ${order.product_note || '无备注'}</div>
+                    ${order.tracking_number ? `<div>📮 运单号：${order.tracking_number}</div>` : ''}
+                    ${order.pickup_code ? `<div>🔑 取件码：${order.pickup_code}</div>` : ''}
+                    ${order.admin_remark ? `<div>💬 备注：${order.admin_remark}</div>` : ''}
+                    ${order.modify_history ? `<div style="color:#ff6b00;font-size:12px;">📝 修改记录：${order.modify_history}</div>` : ''}
                 </div>
                 <div class="bottom">
                     <select onchange="updateOrder(${order.id}, 'status', this.value)">
-                        <option value="0" ${order.status === 0 ? 'selected' : ''}>待处理</option>
-                        <option value="1" ${order.status === 1 ? 'selected' : ''}>已发货</option>
-                        <option value="2" ${order.status === 2 ? 'selected' : ''}>已拒绝</option>
+                        <option value="0" ${order.status === 0 ? 'selected' : ''}>待付款</option>
+                        <option value="1" ${order.status === 1 ? 'selected' : ''}>已付款</option>
+                        <option value="2" ${order.status === 2 ? 'selected' : ''}>已收款</option>
+                        <option value="3" ${order.status === 3 ? 'selected' : ''}>已发货</option>
+                        <option value="4" ${order.status === 4 ? 'selected' : ''}>已拒绝</option>
                     </select>
                     <input type="text" placeholder="运单号" value="${order.tracking_number || ''}" 
                            onchange="updateOrder(${order.id}, 'tracking_number', this.value)">
@@ -302,6 +339,7 @@ function renderOrders(orders, status) {
                     <input type="text" placeholder="备注" value="${order.admin_remark || ''}" 
                            onchange="updateOrder(${order.id}, 'admin_remark', this.value)">
                     <button class="btn-save" onclick="updateOrder(${order.id})">💾 保存</button>
+                    ${actionButtons}
                     <button class="btn-danger" onclick="deleteOrder(${order.id})">🗑️ 删除</button>
                 </div>
             </div>
@@ -311,7 +349,7 @@ function renderOrders(orders, status) {
 }
 
 // ============================================================
-// 更新订单
+// 更新订单（通用）
 // ============================================================
 async function updateOrder(id, field, value) {
     if (field) {
@@ -356,9 +394,7 @@ async function doUpdateOrder(id) {
 
         if (data.code === 200) {
             showToast('✅ 保存成功');
-            const activeStatus = document.querySelector('#statsBar .stat-item.active');
-            const status = activeStatus ? activeStatus.dataset.status : 'all';
-            loadOrders(status, activeStatus);
+            loadOrders('all');
         } else {
             showToast(data.msg || '保存失败');
             btn.textContent = '💾 保存';
@@ -369,6 +405,74 @@ async function doUpdateOrder(id) {
         btn.textContent = '💾 保存';
         btn.disabled = false;
         console.error(e);
+    }
+}
+
+// ============================================================
+// 发货
+// ============================================================
+async function shipOrder(id) {
+    const card = document.querySelector(`.order-card[data-id="${id}"]`);
+    const inputs = card.querySelectorAll('input');
+    const trackingNumber = inputs[0].value.trim();
+    const pickupCode = inputs[1].value.trim();
+    const adminRemark = inputs[2].value.trim();
+
+    if (!trackingNumber) {
+        showToast('请先填写运单号！');
+        return;
+    }
+
+    if (!confirm('确认发货吗？')) return;
+
+    try {
+        const resp = await fetch(`${API_BASE}/api/master/order/ship`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                password: MASTER_PASSWORD,
+                id: id,
+                trackingNumber: trackingNumber,
+                pickupCode: pickupCode,
+                adminRemark: adminRemark
+            })
+        });
+        const data = await resp.json();
+        if (data.code === 200) {
+            showToast('✅ 发货成功！');
+            loadOrders('all');
+        } else {
+            showToast(data.msg || '发货失败');
+        }
+    } catch (e) {
+        showToast('网络异常，请重试');
+    }
+}
+
+// ============================================================
+// 拒绝订单
+// ============================================================
+async function rejectOrder(id) {
+    if (!confirm('确认拒绝此订单吗？')) return;
+
+    try {
+        const resp = await fetch(`${API_BASE}/api/master/order/reject`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                password: MASTER_PASSWORD,
+                id: id
+            })
+        });
+        const data = await resp.json();
+        if (data.code === 200) {
+            showToast('✅ 已拒绝');
+            loadOrders('all');
+        } else {
+            showToast(data.msg || '操作失败');
+        }
+    } catch (e) {
+        showToast('网络异常，请重试');
     }
 }
 
@@ -390,9 +494,7 @@ async function deleteOrder(id) {
         const data = await resp.json();
         if (data.code === 200) {
             showToast('✅ 已移入回收站');
-            const activeStatus = document.querySelector('#statsBar .stat-item.active');
-            const status = activeStatus ? activeStatus.dataset.status : 'all';
-            loadOrders(status, activeStatus);
+            loadOrders('all');
         } else {
             showToast(data.msg || '删除失败');
         }
@@ -430,7 +532,7 @@ async function loadRecycle() {
                             <span class="time">${order.created_at || ''}</span>
                         </div>
                         <div class="info">
-                            <div>📍 ${order.customer_address}</div>
+                            <div>📍 ${order.province || ''}${order.city || ''}${order.district || ''} ${order.detail_address || ''}</div>
                             <div>📝 ${order.product_note || '无备注'}</div>
                         </div>
                         <div class="bottom">
@@ -499,7 +601,7 @@ async function permanentDelete(id) {
 // 更新统计数
 // ============================================================
 function updateCounts(orders) {
-    const counts = { 0: 0, 1: 0, 2: 0 };
+    const counts = { 0: 0, 1: 0, 2: 0, 3: 0, 4: 0 };
     orders.forEach(o => {
         if (counts[o.status] !== undefined) counts[o.status]++;
     });
@@ -507,6 +609,8 @@ function updateCounts(orders) {
     document.getElementById('count0').textContent = counts[0];
     document.getElementById('count1').textContent = counts[1];
     document.getElementById('count2').textContent = counts[2];
+    document.getElementById('count3').textContent = counts[3];
+    document.getElementById('count4').textContent = counts[4];
 }
 
 // ============================================================
