@@ -79,7 +79,7 @@
         <button onclick="doLogin()">登 录</button>
         <p id="loginError" class="login-error">❌ 密码错误，请重试</p>
         <div style="text-align:center;margin-top:12px;font-size:12px;color:#ccc;">
-            默认密码: 8888
+            默认密码: Aa7758521
         </div>
     </div>
 
@@ -118,8 +118,16 @@
                 <div class="form-group">
                     <label>选择代理商</label>
                     <select id="settingAgentId">
-                        <option value="1">深圳昆仑</option>
-                        <option value="2">广州分仓</option>
+                        <option value="1">深圳总仓1001</option>
+                        <option value="2">深圳总仓1002</option>
+                        <option value="3">深圳总仓1003</option>
+                        <option value="4">深圳总仓1004</option>
+                        <option value="5">深圳总仓1005</option>
+                        <option value="6">深圳总仓1006</option>
+                        <option value="7">深圳总仓1007</option>
+                        <option value="8">深圳总仓1008</option>
+                        <option value="9">深圳总仓1009</option>
+                        <option value="10">深圳总仓1010</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -147,11 +155,10 @@
 
 <script>
 // ============================================================
-// 配置
+// 配置 - 总管理员密码
 // ============================================================
 const API_BASE = 'https://order-api.dingdanguanli.workers.dev';
 const MASTER_PASSWORD = 'Aa7758521';
-let currentPassword = '';
 
 // ============================================================
 // Toast
@@ -170,7 +177,6 @@ function showToast(msg) {
 function doLogin() {
     const pwd = document.getElementById('pwdInput').value.trim();
     if (pwd === MASTER_PASSWORD) {
-        currentPassword = pwd;
         document.getElementById('loginBox').style.display = 'none';
         document.getElementById('adminPanel').style.display = 'block';
         document.getElementById('loginError').style.display = 'none';
@@ -253,7 +259,18 @@ function renderOrders(orders, status) {
 
     const statusMap = ['待处理', '已发货', '已拒绝'];
     const statusClass = ['pending', 'shipped', 'rejected'];
-    const agentNames = { 1: '深圳昆仑', 2: '广州分仓' };
+    const agentNames = {
+        1: '深圳总仓1001',
+        2: '深圳总仓1002',
+        3: '深圳总仓1003',
+        4: '深圳总仓1004',
+        5: '深圳总仓1005',
+        6: '深圳总仓1006',
+        7: '深圳总仓1007',
+        8: '深圳总仓1008',
+        9: '深圳总仓1009',
+        10: '深圳总仓1010'
+    };
 
     let html = '';
     orders.forEach(order => {
