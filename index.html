@@ -225,7 +225,7 @@
     <div id="tabQuery" class="card">
         <div class="form-group">
             <label>输入手机号查订单 *</label>
-            <input id="qPhone" type="tel" placeholder="请输入下单时的手机号" onkeyup="if(event.keyCode===13) doQuery()">
+            <input id="qPhone" type="tel" placeholder="请输入下单时的手机号">
         </div>
         <button class="btn btn-primary" onclick="doQuery()">🔍 查询我的订单</button>
         <div id="orderList" style="margin-top:16px;"></div>
@@ -268,14 +268,14 @@
 // 配置
 // ============================================================
 const API_BASE = 'https://order-api.dingdanguanli.workers.dev';
-let currentAgentId = 1;
-let agentConfig = {};
-let editingOrderId = null;
+var currentAgentId = 1;
+var agentConfig = {};
+var editingOrderId = null;
 
 // ============================================================
 // 省市区数据
 // ============================================================
-const regionData = {
+var regionData = {
     "广东省": { "广州市": ["天河区", "白云区", "番禺区", "海珠区", "越秀区", "荔湾区", "黄埔区", "花都区", "南沙区", "从化区", "增城区"], "深圳市": ["南山区", "福田区", "罗湖区", "宝安区", "龙岗区", "龙华区", "光明区", "坪山区", "盐田区", "大鹏新区"], "东莞市": ["南城街道", "东城街道", "万江街道", "莞城街道", "松山湖"], "佛山市": ["禅城区", "南海区", "顺德区", "三水区", "高明区"], "珠海市": ["香洲区", "斗门区", "金湾区"], "中山市": ["石岐街道", "东区街道", "西区街道", "南区街道"], "惠州市": ["惠城区", "惠阳区", "博罗县", "惠东县", "龙门县"], "江门市": ["蓬江区", "江海区", "新会区", "台山市", "开平市", "鹤山市", "恩平市"], "肇庆市": ["端州区", "鼎湖区", "高要区", "四会市", "广宁县", "怀集县", "封开县", "德庆县"], "汕头市": ["金平区", "龙湖区", "濠江区", "澄海区", "潮阳区", "潮南区", "南澳县"], "潮州市": ["湘桥区", "潮安区", "饶平县"], "揭阳市": ["榕城区", "揭东区", "揭西县", "惠来县", "普宁市"], "汕尾市": ["城区", "海丰县", "陆河县", "陆丰市"], "湛江市": ["赤坎区", "霞山区", "坡头区", "麻章区", "遂溪县", "徐闻县", "廉江市", "雷州市", "吴川市"], "茂名市": ["茂南区", "电白区", "高州市", "化州市", "信宜市"], "阳江市": ["江城区", "阳东区", "阳西县", "阳春市"], "清远市": ["清城区", "清新区", "佛冈县", "阳山县", "连山壮族瑶族自治县", "连南瑶族自治县", "英德市", "连州市"], "韶关市": ["浈江区", "武江区", "曲江区", "始兴县", "仁化县", "翁源县", "乳源瑶族自治县", "乐昌市", "南雄市"], "河源市": ["源城区", "紫金县", "龙川县", "连平县", "和平县", "东源县"], "梅州市": ["梅江区", "梅县区", "大埔县", "丰顺县", "五华县", "平远县", "蕉岭县", "兴宁市"], "云浮市": ["云城区", "云安区", "新兴县", "郁南县", "罗定市"]
 };
 regionData["北京市"] = { "北京市": ["东城区", "西城区", "朝阳区", "海淀区", "丰台区", "石景山区", "通州区", "大兴区", "顺义区", "昌平区", "房山区", "门头沟区", "怀柔区", "平谷区", "密云区", "延庆区"] };
@@ -287,63 +287,63 @@ regionData["江苏省"] = { "南京市": ["玄武区", "秦淮区", "建邺区",
 // 初始化省市区下拉框
 // ============================================================
 function initProvince() {
-    const select = document.getElementById('oProvince');
+    var select = document.getElementById('oProvince');
     select.innerHTML = '<option value="">请选择</option>';
-    for (const p in regionData) {
-        select.innerHTML += `<option value="${p}">${p}</option>`;
+    for (var p in regionData) {
+        select.innerHTML += '<option value="' + p + '">' + p + '</option>';
     }
 }
 function initEditProvince() {
-    const select = document.getElementById('eProvince');
+    var select = document.getElementById('eProvince');
     select.innerHTML = '<option value="">请选择</option>';
-    for (const p in regionData) {
-        select.innerHTML += `<option value="${p}">${p}</option>`;
+    for (var p in regionData) {
+        select.innerHTML += '<option value="' + p + '">' + p + '</option>';
     }
 }
 function updateCity() {
-    const p = document.getElementById('oProvince').value;
-    const citySelect = document.getElementById('oCity');
-    const districtSelect = document.getElementById('oDistrict');
+    var p = document.getElementById('oProvince').value;
+    var citySelect = document.getElementById('oCity');
+    var districtSelect = document.getElementById('oDistrict');
     citySelect.innerHTML = '<option value="">请选择</option>';
     districtSelect.innerHTML = '<option value="">请选择</option>';
     if (p && regionData[p]) {
-        for (const c in regionData[p]) {
-            citySelect.innerHTML += `<option value="${c}">${c}</option>`;
+        for (var c in regionData[p]) {
+            citySelect.innerHTML += '<option value="' + c + '">' + c + '</option>';
         }
     }
 }
 function updateEditCity() {
-    const p = document.getElementById('eProvince').value;
-    const citySelect = document.getElementById('eCity');
-    const districtSelect = document.getElementById('eDistrict');
+    var p = document.getElementById('eProvince').value;
+    var citySelect = document.getElementById('eCity');
+    var districtSelect = document.getElementById('eDistrict');
     citySelect.innerHTML = '<option value="">请选择</option>';
     districtSelect.innerHTML = '<option value="">请选择</option>';
     if (p && regionData[p]) {
-        for (const c in regionData[p]) {
-            citySelect.innerHTML += `<option value="${c}">${c}</option>`;
+        for (var c in regionData[p]) {
+            citySelect.innerHTML += '<option value="' + c + '">' + c + '</option>';
         }
     }
 }
 function updateDistrict() {
-    const p = document.getElementById('oProvince').value;
-    const c = document.getElementById('oCity').value;
-    const districtSelect = document.getElementById('oDistrict');
+    var p = document.getElementById('oProvince').value;
+    var c = document.getElementById('oCity').value;
+    var districtSelect = document.getElementById('oDistrict');
     districtSelect.innerHTML = '<option value="">请选择</option>';
     if (p && c && regionData[p] && regionData[p][c]) {
-        regionData[p][c].forEach(d => {
-            districtSelect.innerHTML += `<option value="${d}">${d}</option>`;
-        });
+        for (var i = 0; i < regionData[p][c].length; i++) {
+            districtSelect.innerHTML += '<option value="' + regionData[p][c][i] + '">' + regionData[p][c][i] + '</option>';
+        }
     }
 }
 function updateEditDistrict() {
-    const p = document.getElementById('eProvince').value;
-    const c = document.getElementById('eCity').value;
-    const districtSelect = document.getElementById('eDistrict');
+    var p = document.getElementById('eProvince').value;
+    var c = document.getElementById('eCity').value;
+    var districtSelect = document.getElementById('eDistrict');
     districtSelect.innerHTML = '<option value="">请选择</option>';
     if (p && c && regionData[p] && regionData[p][c]) {
-        regionData[p][c].forEach(d => {
-            districtSelect.innerHTML += `<option value="${d}">${d}</option>`;
-        });
+        for (var i = 0; i < regionData[p][c].length; i++) {
+            districtSelect.innerHTML += '<option value="' + regionData[p][c][i] + '">' + regionData[p][c][i] + '</option>';
+        }
     }
 }
 
@@ -351,24 +351,30 @@ function updateEditDistrict() {
 // Toast
 // ============================================================
 function showToast(msg) {
-    const t = document.getElementById('toast');
+    var t = document.getElementById('toast');
     t.textContent = msg;
     t.classList.add('show');
     clearTimeout(t._timer);
-    t._timer = setTimeout(() => t.classList.remove('show'), 2500);
+    t._timer = setTimeout(function() { t.classList.remove('show'); }, 2500);
 }
 
 // ============================================================
 // Tab切换
 // ============================================================
 function switchTab(tab) {
-    document.querySelectorAll('.tabs button').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.card').forEach(c => c.classList.remove('active'));
+    var buttons = document.querySelectorAll('.tabs button');
+    for (var i = 0; i < buttons.length; i++) {
+        buttons[i].classList.remove('active');
+    }
+    var cards = document.querySelectorAll('.card');
+    for (var i = 0; i < cards.length; i++) {
+        cards[i].classList.remove('active');
+    }
     if (tab === 'order') {
-        document.querySelector('.tabs button:first-child').classList.add('active');
+        buttons[0].classList.add('active');
         document.getElementById('tabOrder').classList.add('active');
     } else {
-        document.querySelector('.tabs button:last-child').classList.add('active');
+        buttons[1].classList.add('active');
         document.getElementById('tabQuery').classList.add('active');
     }
 }
@@ -377,7 +383,7 @@ function switchTab(tab) {
 // 获取代理ID
 // ============================================================
 function getAgentId() {
-    const params = new URLSearchParams(window.location.search);
+    var params = new URLSearchParams(window.location.search);
     return parseInt(params.get('agent')) || 1;
 }
 
@@ -387,24 +393,24 @@ function getAgentId() {
 async function loadAgentConfig() {
     currentAgentId = getAgentId();
     try {
-        const resp = await fetch(`${API_BASE}/api/agent/config?agentId=${currentAgentId}`);
-        const data = await resp.json();
+        var resp = await fetch(API_BASE + '/api/agent/config?agentId=' + currentAgentId);
+        var data = await resp.json();
         if (data.code === 200) {
             agentConfig = data.data;
             document.getElementById('agentDisplay').textContent = '🏪 ' + agentConfig.agent_name;
 
-            let html = '';
-            if (agentConfig.qq) html += `<a href="http://wpa.qq.com/msgrd?v=3&uin=${agentConfig.qq}&site=qq&menu=yes" target="_blank" class="qq-btn">💬 QQ咨询</a>`;
-            if (agentConfig.wechat) html += `<div class="wechat-info">📱 微信号：${agentConfig.wechat} <button class="copy-btn" onclick="copyText('${agentConfig.wechat}')">复制</button></div>`;
-            if (agentConfig.qr_code_url) html += `<div><img src="${agentConfig.qr_code_url}" class="qr-img" alt="微信二维码" onerror="this.style.display='none'"></div>`;
-            if (agentConfig.welcome_text) html += `<div class="welcome-text">${agentConfig.welcome_text}</div>`;
+            var html = '';
+            if (agentConfig.qq) html += '<a href="http://wpa.qq.com/msgrd?v=3&uin=' + agentConfig.qq + '&site=qq&menu=yes" target="_blank" class="qq-btn">💬 QQ咨询</a>';
+            if (agentConfig.wechat) html += '<div class="wechat-info">📱 微信号：' + agentConfig.wechat + ' <button class="copy-btn" onclick="copyText(\'' + agentConfig.wechat + '\')">复制</button></div>';
+            if (agentConfig.qr_code_url) html += '<div><img src="' + agentConfig.qr_code_url + '" class="qr-img" alt="微信二维码" onerror="this.style.display=\'none\'"></div>';
+            if (agentConfig.welcome_text) html += '<div class="welcome-text">' + agentConfig.welcome_text + '</div>';
             document.getElementById('contactContent').innerHTML = html || '<span style="color:#ccc;">暂无客服信息</span>';
 
             document.getElementById('stockImageArea').innerHTML = agentConfig.stock_image_url ?
-                `<img src="${agentConfig.stock_image_url}" class="stock-image" alt="库存图片" onerror="this.style.display='none'">` : '';
+                '<img src="' + agentConfig.stock_image_url + '" class="stock-image" alt="库存图片" onerror="this.style.display=\'none\'">' : '';
 
             document.getElementById('orderNoticeArea').innerHTML = agentConfig.order_notice ?
-                `<div class="order-notice">📌 <strong>下单须知</strong><br>${agentConfig.order_notice.replace(/\n/g, '<br>')}</div>` : '';
+                '<div class="order-notice">📌 <strong>下单须知</strong><br>' + agentConfig.order_notice.replace(/\n/g, '<br>') + '</div>' : '';
         }
     } catch(e) { console.error(e); }
 }
@@ -414,9 +420,9 @@ async function loadAgentConfig() {
 // ============================================================
 function copyText(text) {
     if (navigator.clipboard) {
-        navigator.clipboard.writeText(text).then(() => showToast('✅ 已复制'));
+        navigator.clipboard.writeText(text).then(function() { showToast('✅ 已复制'); });
     } else {
-        const ta = document.createElement('textarea');
+        var ta = document.createElement('textarea');
         ta.value = text;
         document.body.appendChild(ta);
         ta.select();
@@ -430,13 +436,13 @@ function copyText(text) {
 // 下单
 // ============================================================
 async function doOrder() {
-    const name = document.getElementById('oName').value.trim();
-    const phone = document.getElementById('oPhone').value.trim();
-    const province = document.getElementById('oProvince').value;
-    const city = document.getElementById('oCity').value;
-    const district = document.getElementById('oDistrict').value;
-    const detailAddress = document.getElementById('oDetailAddress').value.trim();
-    const note = document.getElementById('oNote').value.trim();
+    var name = document.getElementById('oName').value.trim();
+    var phone = document.getElementById('oPhone').value.trim();
+    var province = document.getElementById('oProvince').value;
+    var city = document.getElementById('oCity').value;
+    var district = document.getElementById('oDistrict').value;
+    var detailAddress = document.getElementById('oDetailAddress').value.trim();
+    var note = document.getElementById('oNote').value.trim();
 
     if (!name) { showToast('请填写姓名'); return; }
     if (!phone || !/^1\d{10}$/.test(phone)) { showToast('请输入正确的手机号'); return; }
@@ -446,7 +452,7 @@ async function doOrder() {
     if (!detailAddress) { showToast('请填写详细地址'); return; }
 
     try {
-        const resp = await fetch(`${API_BASE}/api/order/create`, {
+        var resp = await fetch(API_BASE + '/api/order/create', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -460,7 +466,7 @@ async function doOrder() {
                 agentId: currentAgentId
             })
         });
-        const data = await resp.json();
+        var data = await resp.json();
         if (data.code === 200) {
             showToast('✅ 下单成功！请等待商家确认');
             document.getElementById('oName').value = '';
@@ -480,50 +486,51 @@ async function doOrder() {
 // 查询订单
 // ============================================================
 async function doQuery() {
-    const phone = document.getElementById('qPhone').value.trim();
+    var phone = document.getElementById('qPhone').value.trim();
     if (!phone) { showToast('请输入手机号'); return; }
     if (!/^1\d{10}$/.test(phone)) { showToast('请输入正确的手机号'); return; }
 
-    const list = document.getElementById('orderList');
+    var list = document.getElementById('orderList');
     list.innerHTML = '<div style="text-align:center;color:#999;padding:20px;">⏳ 查询中...</div>';
 
     try {
-        const resp = await fetch(`${API_BASE}/api/order/query?phone=${encodeURIComponent(phone)}`);
-        const data = await resp.json();
+        var resp = await fetch(API_BASE + '/api/order/query?phone=' + encodeURIComponent(phone));
+        var data = await resp.json();
 
         if (data.code === 200 && data.data && data.data.length > 0) {
-            const orders = data.data;
-            const statusMap = ['待付款', '已付款（待确认）', '已收款', '已发货', '已拒绝'];
-            const statusClass = ['s0', 's1', 's2', 's3', 's4'];
-            let html = '<div style="font-size:14px;color:#666;margin-bottom:12px;">共 ' + orders.length + ' 个订单</div>';
-            orders.forEach(o => {
-                let actionsHtml = '';
+            var orders = data.data;
+            var statusMap = ['待付款', '已付款（待确认）', '已收款', '已发货', '已拒绝'];
+            var statusClass = ['s0', 's1', 's2', 's3', 's4'];
+            var html = '<div style="font-size:14px;color:#666;margin-bottom:12px;">共 ' + orders.length + ' 个订单</div>';
+            for (var i = 0; i < orders.length; i++) {
+                var o = orders[i];
+                var actionsHtml = '';
                 if (o.status === 0) {
-                    actionsHtml = `
-                        <button class="btn-edit" onclick="openEditModal(${o.id})">✏️ 修改订单</button>
-                        <button class="btn-pay" onclick="markPaid(${o.id})">💰 我已付款</button>
-                    `;
+                    actionsHtml = '
+                        <button class="btn-edit" onclick="openEditModal(' + o.id + ')">✏️ 修改订单</button>
+                        <button class="btn-pay" onclick="markPaid(' + o.id + ')">💰 我已付款</button>
+                    ';
                 }
-                let remarksHtml = '';
-                if (o.product_note) remarksHtml += `<div>📝 客户备注：${o.product_note}</div>`;
-                if (o.admin_remark) remarksHtml += `<div>💬 商家备注：${o.admin_remark}</div>`;
+                var remarksHtml = '';
+                if (o.product_note) remarksHtml += '<div>📝 客户备注：' + o.product_note + '</div>';
+                if (o.admin_remark) remarksHtml += '<div>💬 商家备注：' + o.admin_remark + '</div>';
 
-                html += `
-                    <div class="order-item" data-id="${o.id}">
+                html += '
+                    <div class="order-item" data-id="' + o.id + '">
                         <div class="top">
-                            <span><span class="status ${statusClass[o.status] || 's0'}">${statusMap[o.status] || '未知'}</span> <strong>${o.customer_name}</strong></span>
-                            <span style="color:#999;font-size:12px;">${o.created_at || ''}</span>
+                            <span><span class="status ' + statusClass[o.status] + '">' + statusMap[o.status] + '</span> <strong>' + o.customer_name + '</strong></span>
+                            <span style="color:#999;font-size:12px;">' + (o.created_at || '') + '</span>
                         </div>
                         <div class="info">
-                            <div>📍 ${o.province || ''}${o.city || ''}${o.district || ''} ${o.detail_address || ''}</div>
-                            ${remarksHtml}
-                            ${o.tracking_number ? `<div>📮 运单号：<span class="tracking">${o.tracking_number}</span></div>` : ''}
-                            ${o.pickup_code ? `<div>🔑 取件码：<span class="pickup">${o.pickup_code}</span></div>` : ''}
+                            <div>📍 ' + (o.province || '') + (o.city || '') + (o.district || '') + ' ' + (o.detail_address || '') + '</div>
+                            ' + remarksHtml + '
+                            ' + (o.tracking_number ? '<div>📮 运单号：<span class="tracking">' + o.tracking_number + '</span></div>' : '') + '
+                            ' + (o.pickup_code ? '<div>🔑 取件码：<span class="pickup">' + o.pickup_code + '</span></div>' : '') + '
                         </div>
-                        ${actionsHtml ? `<div class="actions">${actionsHtml}</div>` : ''}
+                        ' + (actionsHtml ? '<div class="actions">' + actionsHtml + '</div>' : '') + '
                     </div>
-                `;
-            });
+                ';
+            }
             list.innerHTML = html;
         } else {
             list.innerHTML = '<div class="empty">📭 暂无订单</div>';
@@ -537,12 +544,12 @@ async function doQuery() {
 async function markPaid(orderId) {
     if (!confirm('确认已转账给商家了吗？')) return;
     try {
-        const resp = await fetch(`${API_BASE}/api/order/mark-paid`, {
+        var resp = await fetch(API_BASE + '/api/order/mark-paid', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ orderId: orderId })
         });
-        const data = await resp.json();
+        var data = await resp.json();
         if (data.code === 200) {
             showToast('✅ 已提交付款申请，等待商家确认');
             doQuery();
@@ -558,10 +565,13 @@ async function markPaid(orderId) {
 async function openEditModal(orderId) {
     editingOrderId = orderId;
     try {
-        const resp = await fetch(`${API_BASE}/api/order/query?phone=${document.getElementById('qPhone').value.trim()}`);
-        const data = await resp.json();
+        var resp = await fetch(API_BASE + '/api/order/query?phone=' + encodeURIComponent(document.getElementById('qPhone').value.trim()));
+        var data = await resp.json();
         if (data.code === 200 && data.data) {
-            const order = data.data.find(o => o.id === orderId);
+            var order = null;
+            for (var i = 0; i < data.data.length; i++) {
+                if (data.data[i].id === orderId) { order = data.data[i]; break; }
+            }
             if (order) {
                 document.getElementById('eName').value = order.customer_name || '';
                 document.getElementById('ePhone').value = order.customer_phone || '';
@@ -581,13 +591,13 @@ function closeEditModal() {
     document.getElementById('editModal').classList.remove('show');
 }
 async function submitEdit() {
-    const name = document.getElementById('eName').value.trim();
-    const phone = document.getElementById('ePhone').value.trim();
-    const province = document.getElementById('eProvince').value;
-    const city = document.getElementById('eCity').value;
-    const district = document.getElementById('eDistrict').value;
-    const detailAddress = document.getElementById('eDetailAddress').value.trim();
-    const note = document.getElementById('eNote').value.trim();
+    var name = document.getElementById('eName').value.trim();
+    var phone = document.getElementById('ePhone').value.trim();
+    var province = document.getElementById('eProvince').value;
+    var city = document.getElementById('eCity').value;
+    var district = document.getElementById('eDistrict').value;
+    var detailAddress = document.getElementById('eDetailAddress').value.trim();
+    var note = document.getElementById('eNote').value.trim();
 
     if (!name || !phone || !province || !city || !district || !detailAddress) {
         showToast('请填写完整信息');
@@ -596,7 +606,7 @@ async function submitEdit() {
     if (!/^1\d{10}$/.test(phone)) { showToast('请输入正确的手机号'); return; }
 
     try {
-        const resp = await fetch(`${API_BASE}/api/order/update`, {
+        var resp = await fetch(API_BASE + '/api/order/update', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -610,7 +620,7 @@ async function submitEdit() {
                 productNote: note
             })
         });
-        const data = await resp.json();
+        var data = await resp.json();
         if (data.code === 200) {
             showToast('✅ 修改已提交，等待商家确认');
             closeEditModal();
@@ -625,16 +635,16 @@ async function submitEdit() {
 // 库存图片弹窗
 // ============================================================
 async function openStockModal() {
-    const modal = document.getElementById('stockModal');
-    const body = document.getElementById('stockModalBody');
+    var modal = document.getElementById('stockModal');
+    var body = document.getElementById('stockModalBody');
     modal.classList.add('show');
     body.innerHTML = '<p style="color:#999;padding:20px;">加载中...</p>';
 
     try {
-        const resp = await fetch(`${API_BASE}/api/agent/config?agentId=${currentAgentId}`);
-        const data = await resp.json();
+        var resp = await fetch(API_BASE + '/api/agent/config?agentId=' + currentAgentId);
+        var data = await resp.json();
         if (data.code === 200 && data.data && data.data.stock_image_url) {
-            body.innerHTML = `<img src="${data.data.stock_image_url}" alt="库存图片" onerror="this.parentElement.innerHTML='<p style=\\'color:#999;padding:20px;\\'>图片加载失败</p>'">`;
+            body.innerHTML = '<img src="' + data.data.stock_image_url + '" alt="库存图片" onerror="this.parentElement.innerHTML=\'<p style=\\\'color:#999;padding:20px;\\\'>图片加载失败</p>\'">';
         } else {
             body.innerHTML = '<p style="color:#999;padding:20px;">暂无库存图片</p>';
         }
@@ -653,6 +663,10 @@ document.addEventListener('DOMContentLoaded', function() {
     initProvince();
     initEditProvince();
     loadAgentConfig();
+    // 回车查询
+    document.getElementById('qPhone').addEventListener('keyup', function(e) {
+        if (e.keyCode === 13) doQuery();
+    });
 });
 </script>
 </body>
