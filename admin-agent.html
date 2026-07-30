@@ -166,7 +166,7 @@ async function loadOrders(status, el) {
     } catch(e) { list.innerHTML = '<div class="empty-tip">加载失败，请刷新</div>'; }
 }
 
-// 格式化修改历史 - 只显示实际变化的字段
+// 格式化修改历史 - 和总后台一模一样
 function formatModifyHistory(modifyHistory) {
     if (!modifyHistory) return '';
     try {
@@ -217,7 +217,7 @@ function renderOrders(orders) {
             actionsHtml = '<button class="btn-action btn-confirm-modify" onclick="confirmModify(' + order.id + ')">✏️ 确认修改</button>';
         }
         var modifiedTag = order.customer_modified === 1 ? '<span class="modified-tag">✏️ 客户已修改</span>' : '';
-        // 显示修改对比内容
+        // 显示修改对比内容（和总后台一样）
         var modifyHtml = '';
         if (order.modify_history) {
             modifyHtml = formatModifyHistory(order.modify_history);
