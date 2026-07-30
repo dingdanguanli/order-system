@@ -109,7 +109,6 @@ function showToast(msg) {
     t._timer = setTimeout(function() { t.className = 'toast'; }, 2500);
 }
 
-// 刷新只刷新数据，不退出登录
 function doRefresh() {
     if (confirm('确定刷新数据吗？')) {
         loadOrders('all');
@@ -166,10 +165,17 @@ function renderOrders(orders) {
     var html = '';
     orders.forEach(function(order) {
         var actionsHtml = '';
+        // 只有状态1（已付款待确认）显示"确认收款"按钮
         if (order.status === 1) {
             actionsHtml = '<button class="btn-action btn-confirm-pay" onclick="confirmPayment(' + order.id + ')">💰 确认收款</button>';
         }
-        var modifiedTag = order.customer_modified === 1 ? '<span class="modified-tag">✏️ 客户已修改，待确认</span>' : '';
+        // 状态2（已修改待确认）只显示标记，没有操作按钮
+        var modifiedTag = '';
+        if (order.customer_modified === 1 && order.status === 2) {
+            modifiedTag = '<span class="modified-tag">✏️ 客户已修改，等待总后台确认</span>';
+        } else if (order.customer_modified === 1) {
+            modifiedTag = '<span class="modified-tag">✏️ 客户已修改</span>';
+        }
         html += '<div class="order-card"><div class="top"><div><span class="badge s' + order.status + '">' + statusMap[order.status] + '</span><span class="name">' + order.customer_name + '</span><span class="phone">' + order.customer_phone + '</span>' + modifiedTag + '</div><span class="time">' + (order.created_at||'') + '</span></div><div class="info"><div>📍 ' + (order.province||'') + (order.city||'') + (order.district||'') + ' ' + (order.detail_address||'') + '</div><div>📝 ' + (order.product_note||'无备注') + '</div>' + (order.tracking_number ? '<div>📮 运单号：<span class="tracking">' + order.tracking_number + '</span></div>' : '') + (order.pickup_code ? '<div>🔑 取件码：<span class="pickup">' + order.pickup_code + '</span></div>' : '') + (order.admin_remark ? '<div>💬 商家备注：' + order.admin_remark + '</div>' : '') + '</div>' + (actionsHtml ? '<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">' + actionsHtml + '</div>' : '') + '</div>';
     });
     list.innerHTML = html;
