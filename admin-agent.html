@@ -52,10 +52,11 @@
         .btn-confirm-modify { background: #ff6b00; color: white; }
         .modified-tag { color: #ff6b00; font-size: 12px; background: #fff3cd; padding: 2px 8px; border-radius: 4px; }
         .header-right { display: flex; gap: 8px; align-items: center; }
-        .modify-compare { background: #f8f9fa; border-radius: 6px; padding: 8px 10px; margin-top: 6px; font-size: 13px; border-left: 3px solid #ff6b00; }
+        .modify-compare { background: #fff8e1; border-radius: 6px; padding: 8px 10px; margin-top: 6px; font-size: 13px; border-left: 3px solid #ff6b00; }
         .modify-compare .old { color: #999; text-decoration: line-through; }
         .modify-compare .new { color: #22c55e; font-weight: 500; }
         .modify-compare .label { color: #666; font-weight: 500; }
+        .modify-compare .field-label { color: #333; font-weight: 500; }
     </style>
 </head>
 <body>
@@ -165,7 +166,7 @@ async function loadOrders(status, el) {
     } catch(e) { list.innerHTML = '<div class="empty-tip">加载失败，请刷新</div>'; }
 }
 
-// 格式化修改历史
+// 格式化修改历史 - 只显示实际变化的字段
 function formatModifyHistory(modifyHistory) {
     if (!modifyHistory) return '';
     try {
@@ -173,17 +174,21 @@ function formatModifyHistory(modifyHistory) {
         if (!data.old || !data.new) return '';
         var html = '<div class="modify-compare">';
         html += '<div class="label">📝 客户申请修改：</div>';
-        // 比较每个字段
-        var fields = ['customer_name', 'customer_phone', 'customer_address', 'product_note'];
-        var labels = {'customer_name':'姓名', 'customer_phone':'手机号', 'customer_address':'地址', 'product_note':'商品备注'};
+        var fieldMap = {
+            'customer_name': '姓名',
+            'customer_phone': '手机号',
+            'customer_address': '地址',
+            'product_note': '商品备注'
+        };
         var hasChange = false;
-        for (var i = 0; i < fields.length; i++) {
-            var f = fields[i];
-            var oldVal = data.old[f] || '';
-            var newVal = data.new[f] || '';
-            if (oldVal !== newVal) {
-                hasChange = true;
-                html += '<div>· ' + labels[f] + '：<span class="old">' + (oldVal || '(空)') + '</span> → <span class="new">' + (newVal || '(空)') + '</span></div>';
+        for (var key in fieldMap) {
+            if (data.old.hasOwnProperty(key) && data.new.hasOwnProperty(key)) {
+                var oldVal = data.old[key] || '';
+                var newVal = data.new[key] || '';
+                if (oldVal !== newVal) {
+                    hasChange = true;
+                    html += '<div>· <span class="field-label">' + fieldMap[key] + '：</span><span class="old">' + (oldVal || '(空)') + '</span> → <span class="new">' + (newVal || '(空)') + '</span></div>';
+                }
             }
         }
         if (!hasChange) {
