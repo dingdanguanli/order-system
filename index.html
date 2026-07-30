@@ -43,9 +43,10 @@
         .order-item .top .status.s0 { background: #fff3cd; color: #856404; }
         .order-item .top .status.s1 { background: #cce5ff; color: #004085; }
         .order-item .top .status.s2 { background: #cce5ff; color: #004085; }
-        .order-item .top .status.s3 { background: #d4edda; color: #155724; }
+        .order-item .top .status.s3 { background: #cce5ff; color: #004085; }
         .order-item .top .status.s4 { background: #d4edda; color: #155724; }
-        .order-item .top .status.s5 { background: #f8d7da; color: #721c24; }
+        .order-item .top .status.s5 { background: #d4edda; color: #155724; }
+        .order-item .top .status.s6 { background: #f8d7da; color: #721c24; }
         .order-item .info { font-size: 14px; color: #666; line-height: 1.8; margin-top: 6px; }
         .order-item .info .pickup { font-size: 20px; font-weight: 700; color: #ff6b00; }
         .order-item .info .tracking { color: #333; font-weight: 500; }
@@ -427,13 +428,18 @@ async function doQuery() {
 
         if (data.code === 200 && data.data && data.data.length > 0) {
             var orders = data.data;
-            var statusMap = ['待付款', '已付款待确认', '已修改待确认', '已收款待发货', '已发货', '已拒绝'];
-            var statusCls = ['s0', 's1', 's2', 's3', 's4', 's5'];
+            // ============================================================
+            // 状态映射（与Worker保持一致）
+            // 0=待付款, 1=已付款待确认, 2=已修改待代理确认, 
+            // 3=已修改待总后台确认, 4=已收款待发货, 5=已发货, 6=已拒绝
+            // ============================================================
+            var statusMap = ['待付款', '已付款待确认', '已修改待代理确认', '已修改待总后台确认', '已收款待发货', '已发货', '已拒绝'];
+            var statusCls = ['s0', 's1', 's2', 's3', 's4', 's5', 's6'];
             var html = '<div style="font-size:14px;color:#666;margin-bottom:12px;">共 ' + orders.length + ' 个订单</div>';
             for (var i = 0; i < orders.length; i++) {
                 var o = orders[i];
                 var actions = '';
-                // 只有状态0（待付款）才显示"修改订单"和"我已付款"按钮
+                // 只有状态0（待付款）才显示"修改订单"和"我已付款"
                 if (o.status === 0) {
                     actions = '<button class="btn-edit" onclick="openEdit(' + o.id + ')">✏️ 修改订单</button><button class="btn-pay" onclick="markPaid(' + o.id + ')">💰 我已付款</button>';
                 }
@@ -511,7 +517,7 @@ async function submitEdit() {
         });
         var data = await resp.json();
         if (data.code === 200) {
-            showToast('✅ 修改已提交，等待商家确认');
+            showToast('✅ 修改已提交，等待代理确认');
             closeEdit();
             doQuery();
         } else { showToast(data.msg || '修改失败'); }
