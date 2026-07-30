@@ -52,6 +52,10 @@
         .btn-confirm-modify { background: #ff6b00; color: white; }
         .modified-tag { color: #ff6b00; font-size: 12px; background: #fff3cd; padding: 2px 8px; border-radius: 4px; }
         .header-right { display: flex; gap: 8px; align-items: center; }
+        .modify-compare { background: #f8f9fa; border-radius: 6px; padding: 8px 10px; margin-top: 6px; font-size: 13px; border-left: 3px solid #ff6b00; }
+        .modify-compare .old { color: #999; text-decoration: line-through; }
+        .modify-compare .new { color: #22c55e; font-weight: 500; }
+        .modify-compare .label { color: #666; font-weight: 500; }
     </style>
 </head>
 <body>
@@ -161,6 +165,37 @@ async function loadOrders(status, el) {
     } catch(e) { list.innerHTML = '<div class="empty-tip">加载失败，请刷新</div>'; }
 }
 
+// 格式化修改历史
+function formatModifyHistory(modifyHistory) {
+    if (!modifyHistory) return '';
+    try {
+        var data = JSON.parse(modifyHistory);
+        if (!data.old || !data.new) return '';
+        var html = '<div class="modify-compare">';
+        html += '<div class="label">📝 客户申请修改：</div>';
+        // 比较每个字段
+        var fields = ['customer_name', 'customer_phone', 'customer_address', 'product_note'];
+        var labels = {'customer_name':'姓名', 'customer_phone':'手机号', 'customer_address':'地址', 'product_note':'商品备注'};
+        var hasChange = false;
+        for (var i = 0; i < fields.length; i++) {
+            var f = fields[i];
+            var oldVal = data.old[f] || '';
+            var newVal = data.new[f] || '';
+            if (oldVal !== newVal) {
+                hasChange = true;
+                html += '<div>· ' + labels[f] + '：<span class="old">' + (oldVal || '(空)') + '</span> → <span class="new">' + (newVal || '(空)') + '</span></div>';
+            }
+        }
+        if (!hasChange) {
+            html += '<div style="color:#999;">（无实质内容变化）</div>';
+        }
+        html += '</div>';
+        return html;
+    } catch(e) {
+        return '';
+    }
+}
+
 function renderOrders(orders) {
     var list = document.getElementById('orderList');
     if (!orders || orders.length === 0) { list.innerHTML = '<div class="empty-tip">🎉 暂无订单</div>'; return; }
@@ -177,7 +212,12 @@ function renderOrders(orders) {
             actionsHtml = '<button class="btn-action btn-confirm-modify" onclick="confirmModify(' + order.id + ')">✏️ 确认修改</button>';
         }
         var modifiedTag = order.customer_modified === 1 ? '<span class="modified-tag">✏️ 客户已修改</span>' : '';
-        html += '<div class="order-card"><div class="top"><div><span class="badge s' + order.status + '">' + statusMap[order.status] + '</span><span class="name">' + order.customer_name + '</span><span class="phone">' + order.customer_phone + '</span>' + modifiedTag + '</div><span class="time">' + (order.created_at||'') + '</span></div><div class="info"><div>📍 ' + (order.province||'') + (order.city||'') + (order.district||'') + ' ' + (order.detail_address||'') + '</div><div>📝 ' + (order.product_note||'无备注') + '</div>' + (order.tracking_number ? '<div>📮 运单号：<span class="tracking">' + order.tracking_number + '</span></div>' : '') + (order.pickup_code ? '<div>🔑 取件码：<span class="pickup">' + order.pickup_code + '</span></div>' : '') + (order.admin_remark ? '<div>💬 商家备注：' + order.admin_remark + '</div>' : '') + '</div>' + (actionsHtml ? '<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">' + actionsHtml + '</div>' : '') + '</div>';
+        // 显示修改对比内容
+        var modifyHtml = '';
+        if (order.modify_history) {
+            modifyHtml = formatModifyHistory(order.modify_history);
+        }
+        html += '<div class="order-card"><div class="top"><div><span class="badge s' + order.status + '">' + statusMap[order.status] + '</span><span class="name">' + order.customer_name + '</span><span class="phone">' + order.customer_phone + '</span>' + modifiedTag + '</div><span class="time">' + (order.created_at||'') + '</span></div><div class="info"><div>📍 ' + (order.province||'') + (order.city||'') + (order.district||'') + ' ' + (order.detail_address||'') + '</div><div>📝 ' + (order.product_note||'无备注') + '</div>' + (order.tracking_number ? '<div>📮 运单号：<span class="tracking">' + order.tracking_number + '</span></div>' : '') + (order.pickup_code ? '<div>🔑 取件码：<span class="pickup">' + order.pickup_code + '</span></div>' : '') + (order.admin_remark ? '<div>💬 商家备注：' + order.admin_remark + '</div>' : '') + modifyHtml + '</div>' + (actionsHtml ? '<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">' + actionsHtml + '</div>' : '') + '</div>';
     });
     list.innerHTML = html;
 }
