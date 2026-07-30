@@ -38,6 +38,8 @@
         .order-card .bottom input:focus { outline: none; border-color: #4a6cf7; }
         .order-card .bottom .btn-save { padding: 6px 16px; background: #4a6cf7; color: white; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; }
         .order-card .bottom .btn-ship { padding: 6px 16px; background: #22c55e; color: white; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; }
+        .order-card .bottom .btn-confirm-modify { padding: 6px 16px; background: #22c55e; color: white; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; }
+        .order-card .bottom .btn-reject-modify { padding: 6px 16px; background: #ff6b6b; color: white; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; }
         .order-card .bottom .btn-reject { padding: 6px 16px; background: #ff6b6b; color: white; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; }
         .order-card .bottom .btn-danger { padding: 6px 16px; background: #ff6b6b; color: white; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; }
         .badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; }
@@ -64,6 +66,7 @@
         .settings-area .preview-img { max-width: 100%; max-height: 150px; border-radius: 8px; margin-top: 6px; border: 1px solid #eee; }
         .settings-hint { font-size: 12px; color: #999; margin-top: 4px; }
         .header-right { display: flex; gap: 8px; align-items: center; }
+        .modify-info { background: #fff3cd; padding: 8px 12px; border-radius: 6px; font-size: 12px; color: #856404; margin-top: 4px; }
     </style>
 </head>
 <body>
@@ -243,14 +246,29 @@ function renderOrders(orders) {
     var html = '';
     orders.forEach(function(order) {
         var actionButtons = '';
+        // 状态2：已修改待确认 → 显示"确认修改"和"拒绝修改"按钮
+        if (order.status === 2) {
+            actionButtons = '<button class="btn-confirm-modify" onclick="confirmModify(' + order.id + ')">✅ 确认修改</button><button class="btn-reject-modify" onclick="rejectModify(' + order.id + ')">❌ 拒绝修改</button>';
+        }
+        // 状态3：已收款待发货 → 显示"发货"按钮
         if (order.status === 3) {
             actionButtons = '<button class="btn-ship" onclick="shipOrder(' + order.id + ')">📦 发货</button>';
         }
-        if (order.status === 0 || order.status === 1 || order.status === 2 || order.status === 3) {
+        // 其他状态显示"拒绝"按钮
+        if (order.status === 0 || order.status === 1) {
             actionButtons += '<button class="btn-reject" onclick="rejectOrder(' + order.id + ')">❌ 拒绝</button>';
         }
-        var modifiedTag = order.customer_modified === 1 ? '<span style="color:#ff6b00;font-size:12px;background:#fff3cd;padding:2px 8px;border-radius:4px;">✏️ 客户已修改</span>' : '';
-        html += '<div class="order-card" data-id="' + order.id + '"><div class="top"><div><span class="badge s' + order.status + '">' + statusMap[order.status] + '</span><span class="name">' + order.customer_name + '</span><span class="phone">' + order.customer_phone + '</span><span class="agent-tag">' + agentNames[order.agent_id] + '</span>' + modifiedTag + '</div><span class="time">' + (order.created_at || '') + '</span></div><div class="info"><div>📍 ' + (order.province||'') + (order.city||'') + (order.district||'') + ' ' + (order.detail_address||'') + '</div><div>📝 ' + (order.product_note || '无备注') + '</div>' + (order.tracking_number ? '<div>📮 运单号：' + order.tracking_number + '</div>' : '') + (order.pickup_code ? '<div>🔑 取件码：' + order.pickup_code + '</div>' : '') + (order.admin_remark ? '<div>💬 备注：' + order.admin_remark + '</div>' : '') + '</div><div class="bottom"><select onchange="updateOrder(' + order.id + ', \'status\', this.value)"><option value="0" ' + (order.status===0?'selected':'') + '>待付款</option><option value="1" ' + (order.status===1?'selected':'') + '>已付款待确认</option><option value="2" ' + (order.status===2?'selected':'') + '>已修改待确认</option><option value="3" ' + (order.status===3?'selected':'') + '>已收款待发货</option><option value="4" ' + (order.status===4?'selected':'') + '>已发货</option><option value="5" ' + (order.status===5?'selected':'') + '>已拒绝</option></select><input type="text" placeholder="运单号" value="' + (order.tracking_number||'') + '" onkeydown="if(event.keyCode===13)updateOrder(' + order.id + ', \'tracking_number\', this.value)"><input type="text" placeholder="取件码" value="' + (order.pickup_code||'') + '" onkeydown="if(event.keyCode===13)updateOrder(' + order.id + ', \'pickup_code\', this.value)"><input type="text" placeholder="备注" value="' + (order.admin_remark||'') + '" onkeydown="if(event.keyCode===13)updateOrder(' + order.id + ', \'admin_remark\', this.value)"><button class="btn-save" onclick="updateOrder(' + order.id + ')">💾 保存</button>' + actionButtons + '<button class="btn-danger" onclick="deleteOrder(' + order.id + ')">🗑️ 删除</button></div></div>';
+        var modifiedTag = order.customer_modified === 1 ? '<span style="color:#ff6b00;font-size:12px;background:#fff3cd;padding:2px 8px;border-radius:4px;">✏️ 客户已修改，待确认</span>' : '';
+        var modifyHistory = '';
+        if (order.modify_history) {
+            try {
+                var history = JSON.parse(order.modify_history);
+                if (history.old && history.new) {
+                    modifyHistory = '<div class="modify-info">📝 修改内容：<br>原地址：' + (history.old.customer_address||'') + '<br>新地址：' + (history.new.customer_address||'') + '</div>';
+                }
+            } catch(e) {}
+        }
+        html += '<div class="order-card" data-id="' + order.id + '"><div class="top"><div><span class="badge s' + order.status + '">' + statusMap[order.status] + '</span><span class="name">' + order.customer_name + '</span><span class="phone">' + order.customer_phone + '</span><span class="agent-tag">' + agentNames[order.agent_id] + '</span>' + modifiedTag + '</div><span class="time">' + (order.created_at || '') + '</span></div><div class="info"><div>📍 ' + (order.province||'') + (order.city||'') + (order.district||'') + ' ' + (order.detail_address||'') + '</div><div>📝 ' + (order.product_note || '无备注') + '</div>' + (order.tracking_number ? '<div>📮 运单号：' + order.tracking_number + '</div>' : '') + (order.pickup_code ? '<div>🔑 取件码：' + order.pickup_code + '</div>' : '') + (order.admin_remark ? '<div>💬 备注：' + order.admin_remark + '</div>' : '') + modifyHistory + '</div><div class="bottom"><select onchange="updateOrder(' + order.id + ', \'status\', this.value)"><option value="0" ' + (order.status===0?'selected':'') + '>待付款</option><option value="1" ' + (order.status===1?'selected':'') + '>已付款待确认</option><option value="2" ' + (order.status===2?'selected':'') + '>已修改待确认</option><option value="3" ' + (order.status===3?'selected':'') + '>已收款待发货</option><option value="4" ' + (order.status===4?'selected':'') + '>已发货</option><option value="5" ' + (order.status===5?'selected':'') + '>已拒绝</option></select><input type="text" placeholder="运单号" value="' + (order.tracking_number||'') + '" onkeydown="if(event.keyCode===13)updateOrder(' + order.id + ', \'tracking_number\', this.value)"><input type="text" placeholder="取件码" value="' + (order.pickup_code||'') + '" onkeydown="if(event.keyCode===13)updateOrder(' + order.id + ', \'pickup_code\', this.value)"><input type="text" placeholder="备注" value="' + (order.admin_remark||'') + '" onkeydown="if(event.keyCode===13)updateOrder(' + order.id + ', \'admin_remark\', this.value)"><button class="btn-save" onclick="updateOrder(' + order.id + ')">💾 保存</button>' + actionButtons + '<button class="btn-danger" onclick="deleteOrder(' + order.id + ')">🗑️ 删除</button></div></div>';
     });
     list.innerHTML = html;
 }
@@ -281,6 +299,38 @@ async function doUpdateOrder(id) {
         if (data.code === 200) { showToast('✅ 保存成功'); loadOrders('all'); }
         else { showToast(data.msg || '保存失败'); btn.textContent = '💾 保存'; btn.disabled = false; }
     } catch(e) { showToast('网络异常，请重试'); btn.textContent = '💾 保存'; btn.disabled = false; }
+}
+
+// ============================================================
+// 总后台 - 确认修改
+// ============================================================
+async function confirmModify(id) {
+    if (!confirm('确认接受客户的修改吗？')) return;
+    try {
+        var resp = await fetch(API_BASE + '/api/master/order/confirm-modify', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password: MASTER_PASSWORD, id: id })
+        });
+        var data = await resp.json();
+        if (data.code === 200) { showToast('✅ 修改已确认'); loadOrders('all'); }
+        else { showToast(data.msg || '操作失败'); }
+    } catch(e) { showToast('网络异常，请重试'); }
+}
+
+// ============================================================
+// 总后台 - 拒绝修改
+// ============================================================
+async function rejectModify(id) {
+    if (!confirm('确定拒绝客户的修改吗？将恢复原数据')) return;
+    try {
+        var resp = await fetch(API_BASE + '/api/master/order/reject-modify', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ password: MASTER_PASSWORD, id: id })
+        });
+        var data = await resp.json();
+        if (data.code === 200) { showToast('✅ 已拒绝修改，已恢复原数据'); loadOrders('all'); }
+        else { showToast(data.msg || '操作失败'); }
+    } catch(e) { showToast('网络异常，请重试'); }
 }
 
 async function shipOrder(id) {
