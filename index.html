@@ -205,8 +205,8 @@
             <div class="form-group"><label>城市 *</label><select id="oCity"><option value="">请选择城市</option></select></div>
             <div class="form-group"><label>区/县 *</label><select id="oDistrict"><option value="">请选择区/县</option></select></div>
         </div>
-        <div class="form-group"><label>详细地址 *</label><input id="oDetailAddress" placeholder="务必提供/代收点、驿站、或快递柜"></div>
-        <div class="form-group"><label>商品备注</label><textarea id="oNote" placeholder="具体型号/口味/数量、如：崧盒A29  苹果  2个、 冰熊2W  草莓  3个"></textarea></div>
+        <div class="form-group"><label>详细地址 *</label><input id="oDetailAddress" placeholder="街道、门牌号等"></div>
+        <div class="form-group"><label>商品备注</label><textarea id="oNote" placeholder="如：红色款 M码 加急"></textarea></div>
         <button class="btn btn-success" id="submitBtn">📝 提交订单</button>
         <div id="orderNoticeArea"></div>
         <div class="contact-area">
@@ -256,7 +256,7 @@ var API_BASE = 'https://order-api.dingdanguanli.workers.dev';
 var currentAgentId = 1;
 var editingOrderId = null;
 
-// 省市区数据（精简版）
+// 省市区数据（完整版）
 var regionData = {
     "北京市": { "北京市": ["东城区","西城区","朝阳区","海淀区","丰台区","石景山区","通州区","大兴区","顺义区","昌平区","房山区","门头沟区","怀柔区","平谷区","密云区","延庆区"] },
     "天津市": { "天津市": ["和平区","河东区","河西区","南开区","河北区","红桥区","东丽区","西青区","津南区","北辰区","武清区","宝坻区","滨海新区","宁河区","静海区","蓟州区"] },
@@ -373,42 +373,6 @@ function getAgentId() {
     return parseInt(params.get('agent')) || 1;
 }
 
-async function loadAgentConfig() {
-    currentAgentId = getAgentId();
-    try {
-        var resp = await fetch(API_BASE + '/api/agent/config?agentId=' + currentAgentId);
-        var data = await resp.json();
-        if (data.code === 200) {
-            var cfg = data.data;
-            document.getElementById('agentDisplay').textContent = '🏪 ' + cfg.agent_name;
-            var html = '';
-            // QQ显示号码 + 复制按钮
-            if (cfg.qq) {
-                html += '<div style="margin-bottom:6px;">';
-                html += '<div style="font-size:14px;color:#666;margin-bottom:4px;">📱 QQ号码：<span class="qq-number">' + cfg.qq + '</span> <button class="copy-btn" onclick="copyText(\'' + cfg.qq + '\')">复制</button></div>';
-                html += '</div>';
-            }
-            // 微信号显示 + 复制按钮（样式与QQ一致）
-            if (cfg.wechat) {
-                html += '<div style="margin-bottom:6px;">';
-                html += '<div style="font-size:14px;color:#666;margin-bottom:4px;">📱 微信号：<span class="qq-number">' + cfg.wechat + '</span> <button class="copy-btn" onclick="copyText(\'' + cfg.wechat + '\')">复制</button></div>';
-                html += '</div>';
-            }
-            // 微信二维码
-            if (cfg.qr_code_url) {
-                html += '<div><img src="' + cfg.qr_code_url + '" class="qr-img" alt="微信二维码" onerror="this.style.display=\'none\'"></div>';
-            }
-            // 欢迎语
-            if (cfg.welcome_text) {
-                html += '<div class="welcome-text">' + cfg.welcome_text + '</div>';
-            }
-            document.getElementById('contactContent').innerHTML = html || '<span style="color:#ccc;">暂无客服信息</span>';
-            if (cfg.stock_image_url) { document.getElementById('stockImageArea').innerHTML = '<img src="' + cfg.stock_image_url + '" class="stock-image" alt="库存图片">'; }
-            if (cfg.order_notice) { document.getElementById('orderNoticeArea').innerHTML = '<div class="order-notice">📌 <strong>下单须知</strong><br>' + cfg.order_notice.replace(/\n/g, '<br>') + '</div>'; }
-        }
-    } catch(e) { console.error(e); }
-}
-
 function copyText(text) {
     if (navigator.clipboard) {
         navigator.clipboard.writeText(text).then(function() { showToast('✅ 已复制'); });
@@ -421,6 +385,38 @@ function copyText(text) {
         document.body.removeChild(ta);
         showToast('✅ 已复制');
     }
+}
+
+async function loadAgentConfig() {
+    currentAgentId = getAgentId();
+    try {
+        var resp = await fetch(API_BASE + '/api/agent/config?agentId=' + currentAgentId);
+        var data = await resp.json();
+        if (data.code === 200) {
+            var cfg = data.data;
+            document.getElementById('agentDisplay').textContent = '🏪 ' + cfg.agent_name;
+            var html = '';
+            if (cfg.qq) {
+                html += '<div style="margin-bottom:6px;">';
+                html += '<div style="font-size:14px;color:#666;margin-bottom:4px;">📱 QQ号码：<span class="qq-number">' + cfg.qq + '</span> <button class="copy-btn" onclick="copyText(\'' + cfg.qq + '\')">复制</button></div>';
+                html += '</div>';
+            }
+            if (cfg.wechat) {
+                html += '<div style="margin-bottom:6px;">';
+                html += '<div style="font-size:14px;color:#666;margin-bottom:4px;">📱 微信号：<span class="qq-number">' + cfg.wechat + '</span> <button class="copy-btn" onclick="copyText(\'' + cfg.wechat + '\')">复制</button></div>';
+                html += '</div>';
+            }
+            if (cfg.qr_code_url) {
+                html += '<div><img src="' + cfg.qr_code_url + '" class="qr-img" alt="微信二维码" onerror="this.style.display=\'none\'"></div>';
+            }
+            if (cfg.welcome_text) {
+                html += '<div class="welcome-text">' + cfg.welcome_text + '</div>';
+            }
+            document.getElementById('contactContent').innerHTML = html || '<span style="color:#ccc;">暂无客服信息</span>';
+            if (cfg.stock_image_url) { document.getElementById('stockImageArea').innerHTML = '<img src="' + cfg.stock_image_url + '" class="stock-image" alt="库存图片">'; }
+            if (cfg.order_notice) { document.getElementById('orderNoticeArea').innerHTML = '<div class="order-notice">📌 <strong>下单须知</strong><br>' + cfg.order_notice.replace(/\n/g, '<br>') + '</div>'; }
+        }
+    } catch(e) { console.error(e); }
 }
 
 async function doOrder() {
@@ -485,7 +481,7 @@ async function doQuery() {
                 if (o.product_note) remarks += '<div>📝 客户备注：' + o.product_note + '</div>';
                 if (o.admin_remark) remarks += '<div>💬 商家备注：' + o.admin_remark + '</div>';
 
-                html += '<div class="order-item"><div class="top"><span><span class="status ' + statusCls[o.status] + '">' + statusMap[o.status] + '</span> <strong>' + o.customer_name + '</strong></span><span style="color:#999;font-size:12px;">' + (o.created_at || '') + '</span></div><div class="info"><div>📍 ' + (o.province||'') + (o.city||'') + (o.district||'') + ' ' + (o.detail_address||'') + '</div>' + remarks + (o.tracking_number ? '<div>📮 运单号：<span class="tracking">' + o.tracking_number + '</span></div>' : '') + (o.pickup_code ? '<div>🔑 取件码：<span class="pickup">' + o.pickup_code + '</span></div>' : '') + '</div>' + (actions ? '<div class="actions">' + actions + '</div>' : '') + '</div>';
+                html += '<div class="order-item"><div class="top"><span><span class="status ' + statusCls[o.status] + '">' + statusMap[o.status] + '</span> <strong>' + o.customer_name + '</strong></span><span style="color:#999;font-size:12px;">' + (o.created_at || '') + '</span></div><div class="info"><div>📍 ' + (o.province||'') + (o.city||'') + (o.district||'') + ' ' + (o.detail_address||'') + '</div>' + remarks + (o.tracking_number ? '<div>📮 运单号：<span class="tracking">' + o.tracking_number + '</span> <button class="copy-btn" onclick="copyText(\'' + o.tracking_number + '\')">复制</button></div>' : '') + (o.pickup_code ? '<div>🔑 取件码：<span class="pickup">' + o.pickup_code + '</span></div>' : '') + '</div>' + (actions ? '<div class="actions">' + actions + '</div>' : '') + '</div>';
             }
             list.innerHTML = html;
         } else {
