@@ -58,8 +58,6 @@
         .empty { text-align: center; color: #bbb; padding: 30px 0; }
 
         .contact-area { margin-top: 20px; padding-top: 16px; border-top: 1px solid #eee; text-align: center; }
-        .contact-area .qq-btn { display: inline-block; padding: 10px 28px; background: #4a6cf7; color: white; border-radius: 10px; text-decoration: none; font-weight: 500; font-size: 15px; }
-        .contact-area .qq-btn:active { background: #3a56d4; }
         .contact-area .wechat-info { margin-top: 8px; color: #666; font-size: 14px; }
         .contact-area .qr-img { max-width: 140px; margin-top: 8px; border-radius: 8px; }
         .contact-area .welcome-text { margin-top: 8px; font-size: 13px; color: #999; }
@@ -207,8 +205,8 @@
             <div class="form-group"><label>城市 *</label><select id="oCity"><option value="">请选择城市</option></select></div>
             <div class="form-group"><label>区/县 *</label><select id="oDistrict"><option value="">请选择区/县</option></select></div>
         </div>
-        <div class="form-group"><label>详细地址 *</label><input id="oDetailAddress" placeholder="街道、门牌号等"></div>
-        <div class="form-group"><label>商品备注</label><textarea id="oNote" placeholder="如：红色款 M码 加急"></textarea></div>
+        <div class="form-group"><label>详细地址 *</label><input id="oDetailAddress" placeholder="务必提供 代收点/驿站/或快递柜"></div>
+        <div class="form-group"><label>商品备注</label><textarea id="oNote" placeholder="具体型号/口味/数量/如：崧盒A29  苹果  5个/冰爆  草莓  5个"></textarea></div>
         <button class="btn btn-success" id="submitBtn">📝 提交订单</button>
         <div id="orderNoticeArea"></div>
         <div class="contact-area">
@@ -246,8 +244,8 @@
                 <div class="form-group"><label>城市 *</label><select id="eCity"><option value="">请选择城市</option></select></div>
                 <div class="form-group"><label>区/县 *</label><select id="eDistrict"><option value="">请选择区/县</option></select></div>
             </div>
-            <div class="form-group"><label>详细地址 *</label><input id="eDetailAddress" placeholder="务必提供代收点/驿站/或快递柜，以免商品退回"></div>
-            <div class="form-group"><label>商品备注</label><textarea id="eNote" placeholder="具体型号/口味/数量/如：崧盒A29  苹果   3个"></textarea></div>
+            <div class="form-group"><label>详细地址 *</label><input id="eDetailAddress" placeholder="街道、门牌号等"></div>
+            <div class="form-group"><label>商品备注</label><textarea id="eNote" placeholder="如：红色款 M码 加急"></textarea></div>
             <button class="btn btn-success" id="submitEditBtn">✅ 确认修改</button>
         </div>
     </div>
@@ -373,11 +371,10 @@ async function loadAgentConfig() {
             var cfg = data.data;
             document.getElementById('agentDisplay').textContent = '🏪 ' + cfg.agent_name;
             var html = '';
-            // QQ显示号码 + 复制按钮 + QQ咨询链接
+            // QQ显示号码 + 复制按钮（已删除QQ咨询链接）
             if (cfg.qq) {
                 html += '<div style="margin-bottom:6px;">';
                 html += '<div style="font-size:14px;color:#666;margin-bottom:4px;">📱 QQ号码：<span class="qq-number">' + cfg.qq + '</span> <button class="copy-btn" onclick="copyText(\'' + cfg.qq + '\')">复制</button></div>';
-                html += '<a href="http://wpa.qq.com/msgrd?v=3&uin=' + cfg.qq + '&site=qq&menu=yes" target="_blank" class="qq-btn">💬 QQ咨询（需加好友）</a>';
                 html += '</div>';
             }
             // 微信号显示 + 复制按钮
