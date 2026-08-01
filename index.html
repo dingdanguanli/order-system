@@ -461,4 +461,142 @@ async function doQuery() {
 
         if (data.code === 200 && data.data && data.data.length > 0) {
             var orders = data.data;
-            var statusMap = ['待付款', '已付款待确认', '已修改待代理确认', '已修改待
+            var statusMap = ['待付款', '已付款待确认', '已修改待代理确认', '已修改待总后台确认', '已收款待发货', '已发货', '已拒绝'];
+            var statusCls = ['s0', 's1', 's2', 's3', 's4', 's5', 's6'];
+            var html = '<div style="font-size:14px;color:#666;margin-bottom:12px;">共 ' + orders.length + ' 个订单</div>';
+            for (var i = 0; i < orders.length; i++) {
+                var o = orders[i];
+                var actions = '';
+                if (o.status === 0) {
+                    actions = '<button class="btn-edit" onclick="openEdit(' + o.id + ')">✏️ 修改订单</button><button class="btn-pay" onclick="markPaid(' + o.id + ')">💰 我已付款</button>';
+                }
+                var remarks = '';
+                if (o.product_note) remarks += '<div>📝 客户备注：' + o.product_note + '</div>';
+                if (o.admin_remark) remarks += '<div>💬 商家备注：' + o.admin_remark + '</div>';
+
+                html += '<div class="order-item"><div class="top"><span><span class="status ' + statusCls[o.status] + '">' + statusMap[o.status] + '</span> <strong>' + o.customer_name + '</strong></span><span style="color:#999;font-size:12px;">' + (o.created_at || '') + '</span></div><div class="info"><div>📍 ' + (o.province||'') + (o.city||'') + (o.district||'') + ' ' + (o.detail_address||'') + '</div>' + remarks + (o.tracking_number ? '<div>📮 运单号：<span class="tracking">' + o.tracking_number + '</span></div>' : '') + (o.pickup_code ? '<div>🔑 取件码：<span class="pickup">' + o.pickup_code + '</span></div>' : '') + '</div>' + (actions ? '<div class="actions">' + actions + '</div>' : '') + '</div>';
+            }
+            list.innerHTML = html;
+        } else {
+            list.innerHTML = '<div class="empty">📭 暂无订单</div>';
+        }
+    } catch(e) { list.innerHTML = '<div class="empty">网络异常，请刷新重试</div>'; }
+}
+
+async function markPaid(id) {
+    if (!confirm('确认已转账给商家了吗？')) return;
+    try {
+        var resp = await fetch(API_BASE + '/api/order/mark-paid', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ orderId: id })
+        });
+        var data = await resp.json();
+        if (data.code === 200) {
+            showToast('✅ 已提交付款申请，等待商家确认');
+            doQuery();
+        } else { showToast(data.msg || '操作失败'); }
+    } catch(e) { showToast('网络异常，请重试'); }
+}
+
+async function openEdit(id) {
+    editingOrderId = id;
+    var phone = document.getElementById('qPhone').value.trim();
+    try {
+        var resp = await fetch(API_BASE + '/api/order/query?phone=' + encodeURIComponent(phone));
+        var data = await resp.json();
+        if (data.code === 200 && data.data) {
+            var order = null;
+            for (var i = 0; i < data.data.length; i++) {
+                if (data.data[i].id === id) { order = data.data[i]; break; }
+            }
+            if (order) {
+                document.getElementById('eName').value = order.customer_name || '';
+                document.getElementById('ePhone').value = order.customer_phone || '';
+                document.getElementById('eProvince').value = order.province || '';
+                loadEditCity();
+                document.getElementById('eCity').value = order.city || '';
+                loadEditDistrict();
+                document.getElementById('eDistrict').value = order.district || '';
+                document.getElementById('eDetailAddress').value = order.detail_address || '';
+                document.getElementById('eNote').value = order.product_note || '';
+                document.getElementById('editModal').className = 'edit-modal show';
+            }
+        }
+    } catch(e) { showToast('加载失败'); }
+}
+
+function closeEdit() { document.getElementById('editModal').className = 'edit-modal'; }
+
+async function submitEdit() {
+    var name = document.getElementById('eName').value.trim();
+    var phone = document.getElementById('ePhone').value.trim();
+    var province = document.getElementById('eProvince').value;
+    var city = document.getElementById('eCity').value;
+    var district = document.getElementById('eDistrict').value;
+    var addr = document.getElementById('eDetailAddress').value.trim();
+    var note = document.getElementById('eNote').value.trim();
+    if (!name || !phone || !province || !city || !district || !addr) { showToast('请填写完整信息'); return; }
+    if (!/^1\d{10}$/.test(phone)) { showToast('请输入正确手机号'); return; }
+    try {
+        var resp = await fetch(API_BASE + '/api/order/update', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ orderId: editingOrderId, customerName: name, customerPhone: phone, province: province, city: city, district: district, detailAddress: addr, productNote: note })
+        });
+        var data = await resp.json();
+        if (data.code === 200) {
+            showToast('✅ 修改已提交，等待代理确认');
+            closeEdit();
+            doQuery();
+        } else { showToast(data.msg || '修改失败'); }
+    } catch(e) { showToast('网络异常，请重试'); }
+}
+
+async function openStock() {
+    var modal = document.getElementById('stockModal');
+    var body = document.getElementById('stockModalBody');
+    modal.className = 'stock-modal show';
+    body.innerHTML = '<p style="color:#999;padding:20px;">加载中...</p>';
+    try {
+        var resp = await fetch(API_BASE + '/api/agent/config?agentId=' + currentAgentId);
+        var data = await resp.json();
+        if (data.code === 200 && data.data && data.data.stock_image_url) {
+            body.innerHTML = '<img src="' + data.data.stock_image_url + '" alt="库存图片">';
+        } else { body.innerHTML = '<p style="color:#999;padding:20px;">暂无库存图片</p>'; }
+    } catch(e) { body.innerHTML = '<p style="color:#999;padding:20px;">加载失败</p>'; }
+}
+
+function closeStock() { document.getElementById('stockModal').className = 'stock-modal'; }
+
+document.addEventListener('DOMContentLoaded', function() {
+    initProvince();
+    document.getElementById('oProvince').addEventListener('change', loadCity);
+    document.getElementById('oCity').addEventListener('change', loadDistrict);
+    document.getElementById('eProvince').addEventListener('change', loadEditCity);
+    document.getElementById('eCity').addEventListener('change', loadEditDistrict);
+    document.getElementById('tabOrderBtn').addEventListener('click', function() { switchTab('order'); });
+    document.getElementById('tabQueryBtn').addEventListener('click', function() { switchTab('query'); });
+    document.getElementById('submitBtn').addEventListener('click', doOrder);
+    document.getElementById('queryBtn').addEventListener('click', doQuery);
+    document.getElementById('qPhone').addEventListener('keyup', function(e) { if (e.key === 'Enter') doQuery(); });
+    document.getElementById('stockFab').addEventListener('click', openStock);
+    document.getElementById('stockModalClose').addEventListener('click', closeStock);
+    document.getElementById('stockModal').addEventListener('click', function(e) { if (e.target === this) closeStock(); });
+    document.getElementById('editModalClose').addEventListener('click', closeEdit);
+    document.getElementById('editModal').addEventListener('click', function(e) { if (e.target === this) closeEdit(); });
+    document.getElementById('submitEditBtn').addEventListener('click', submitEdit);
+    loadAgentConfig();
+});
+
+window.doOrder = doOrder;
+window.doQuery = doQuery;
+window.markPaid = markPaid;
+window.openEdit = openEdit;
+window.closeEdit = closeEdit;
+window.submitEdit = submitEdit;
+window.openStock = openStock;
+window.closeStock = closeStock;
+window.doRefresh = doRefresh;
+window.copyText = copyText;
+</script>
+</body>
+</html>
