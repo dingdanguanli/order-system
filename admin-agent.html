@@ -69,6 +69,14 @@
         .settings-area .form-group textarea { min-height: 60px; resize: vertical; }
         .settings-area .preview-img { max-width: 100%; max-height: 150px; border-radius: 8px; margin-top: 6px; border: 1px solid #eee; }
         .settings-hint { font-size: 12px; color: #999; margin-top: 4px; }
+        .search-area { background: white; border-radius: 10px; padding: 12px 14px; margin-bottom: 12px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+        .search-area input { flex: 1; padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; min-width: 150px; }
+        .search-area input:focus { outline: none; border-color: #4a6cf7; }
+        .search-area .btn-search { padding: 8px 20px; background: #4a6cf7; color: white; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; }
+        .search-area .btn-search:active { background: #3a56d4; }
+        .search-area .btn-clear { padding: 8px 16px; background: #ff6b6b; color: white; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; }
+        .search-area .btn-clear:active { background: #e05555; }
+        .search-hint { font-size: 12px; color: #999; }
     </style>
 </head>
 <body>
@@ -101,14 +109,18 @@
             </div>
         </div>
 
-        <!-- Tab 切换 -->
         <div class="tab-bar">
             <button class="active" onclick="switchTab('orders')" id="tabOrdersBtn">📋 订单管理</button>
             <button onclick="switchTab('settings')" id="tabSettingsBtn">⚙️ 客服设置</button>
         </div>
 
-        <!-- Tab1：订单管理 -->
         <div id="tabOrders" class="tab-content">
+            <div class="search-area">
+                <input id="searchInput" type="text" placeholder="输入运单号后4位或后5位搜索..." onkeyup="if(event.keyCode===13) doSearch()">
+                <button class="btn-search" onclick="doSearch()">🔍 搜索</button>
+                <button class="btn-clear" onclick="clearSearch()">✕ 清除</button>
+                <span class="search-hint">💡 输入运单号后4位或后5位即可搜索</span>
+            </div>
             <div class="readonly-tip">🔒 你可以查看订单，确认收款和确认修改</div>
             <div class="stats" id="statsBar">
                 <span class="stat-item active" data-status="all" onclick="loadOrders('all',this)">全部 <span class="num" id="countAll">0</span></span>
@@ -123,7 +135,6 @@
             <div id="orderList"></div>
         </div>
 
-        <!-- Tab2：客服设置 -->
         <div id="tabSettings" class="tab-content" style="display:none;">
             <div class="settings-area">
                 <h3 style="margin-bottom:12px;font-size:16px;color:#333;">⚙️ 客服信息设置</h3>
@@ -157,6 +168,8 @@ var API_BASE = 'https://order-api.dingdanguanli.workers.dev';
 var AGENT_PASSWORDS = {1:'Aa1001',2:'Aa1002',3:'Aa1003',4:'Aa1004',5:'Aa1005',6:'Aa1006',7:'Aa1007',8:'Aa1008',9:'Aa1009',10:'Aa1010'};
 var AGENT_NAMES = {1:'深圳总仓1001',2:'深圳总仓1002',3:'深圳总仓1003',4:'深圳总仓1004',5:'深圳总仓1005',6:'深圳总仓1006',7:'深圳总仓1007',8:'深圳总仓1008',9:'深圳总仓1009',10:'深圳总仓1010'};
 var currentAgentId = 1;
+var currentSearch = '';
+var currentStatus = 'all';
 
 function showToast(msg) {
     var t = document.getElementById('toast');
@@ -172,13 +185,29 @@ function doRefresh() {
         if (activeTab) {
             var tabId = activeTab.id;
             if (tabId === 'tabOrdersBtn') {
-                loadOrders('all');
+                loadOrders(currentStatus);
             } else if (tabId === 'tabSettingsBtn') {
                 loadSettings();
             }
         }
         showToast('✅ 数据已刷新');
     }
+}
+
+function doSearch() {
+    var input = document.getElementById('searchInput');
+    currentSearch = input.value.trim();
+    if (currentSearch === '') {
+        loadOrders(currentStatus);
+        return;
+    }
+    loadOrders(currentStatus, null, currentSearch);
+}
+
+function clearSearch() {
+    document.getElementById('searchInput').value = '';
+    currentSearch = '';
+    loadOrders(currentStatus);
 }
 
 function doLogin() {
@@ -254,13 +283,18 @@ function formatModifyHistory(modifyHistory) {
     }
 }
 
-async function loadOrders(status, el) {
+async function loadOrders(status, el, search) {
+    currentStatus = status;
     document.querySelectorAll('#statsBar .stat-item').forEach(function(item) { item.classList.remove('active'); });
     if (el) el.classList.add('active');
     var list = document.getElementById('orderList');
     list.innerHTML = '<div class="loading">⏳ 加载中...</div>';
     try {
-        var resp = await fetch(API_BASE + '/api/agent/orders?agentId=' + currentAgentId + '&password=' + AGENT_PASSWORDS[currentAgentId]);
+        var url = API_BASE + '/api/agent/orders?agentId=' + currentAgentId + '&password=' + AGENT_PASSWORDS[currentAgentId];
+        if (search) {
+            url += '&search=' + encodeURIComponent(search);
+        }
+        var resp = await fetch(url);
         var data = await resp.json();
         if (data.code === 401) { showToast('密码错误，请重新登录'); doLogout(); return; }
         if (data.code === 200 && data.data) {
@@ -316,7 +350,7 @@ async function confirmPayment(orderId) {
             body: JSON.stringify({ agentId: currentAgentId, password: AGENT_PASSWORDS[currentAgentId], orderId: orderId })
         });
         var data = await resp.json();
-        if (data.code === 200) { showToast('✅ 确认收款成功'); loadOrders('all'); }
+        if (data.code === 200) { showToast('✅ 确认收款成功'); loadOrders(currentStatus, document.querySelector('#statsBar .stat-item.active'), currentSearch); }
         else { showToast(data.msg || '操作失败'); }
     } catch(e) { showToast('网络异常，请重试'); }
 }
@@ -329,14 +363,11 @@ async function confirmModify(orderId) {
             body: JSON.stringify({ agentId: currentAgentId, password: AGENT_PASSWORDS[currentAgentId], orderId: orderId })
         });
         var data = await resp.json();
-        if (data.code === 200) { showToast('✅ 已确认修改，等待总后台确认'); loadOrders('all'); }
+        if (data.code === 200) { showToast('✅ 已确认修改，等待总后台确认'); loadOrders(currentStatus, document.querySelector('#statsBar .stat-item.active'), currentSearch); }
         else { showToast(data.msg || '操作失败'); }
     } catch(e) { showToast('网络异常，请重试'); }
 }
 
-// ============================================================
-// 客服设置
-// ============================================================
 async function loadSettings() {
     try {
         var resp = await fetch(API_BASE + '/api/agent/config?agentId=' + currentAgentId);
@@ -397,6 +428,8 @@ async function saveSettings() {
 }
 
 window.doRefresh = doRefresh;
+window.doSearch = doSearch;
+window.clearSearch = clearSearch;
 window.confirmPayment = confirmPayment;
 window.confirmModify = confirmModify;
 window.saveSettings = saveSettings;
