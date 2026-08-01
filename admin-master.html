@@ -112,12 +112,11 @@
         </div>
 
         <div id="tabOrders" class="tab-content">
-            <!-- 搜索框 -->
             <div class="search-area">
-                <input id="searchInput" type="text" placeholder="输入运单号后4位或后5位搜索..." onkeyup="if(event.keyCode===13) doSearch()">
+                <input id="searchInput" type="text" placeholder="输入运单号或手机号后四位查询..." onkeyup="if(event.keyCode===13) doSearch()">
                 <button class="btn-search" onclick="doSearch()">🔍 搜索</button>
                 <button class="btn-clear" onclick="clearSearch()">✕ 清除</button>
-                <span class="search-hint">💡 输入运单号后4位或后5位即可搜索</span>
+                <span class="search-hint">💡 输入运单号或手机号后四位即可搜索</span>
             </div>
             <div class="stats" id="statsBar">
                 <span class="stat-item active" data-status="all" onclick="loadOrders('all',this)">全部 <span class="num" id="countAll">0</span></span>
@@ -186,7 +185,7 @@ function doRefresh() {
         if (activeTab) {
             var tabId = activeTab.id;
             if (tabId === 'tabOrdersBtn') {
-                loadOrders('all');
+                loadOrders(currentStatus);
             } else if (tabId === 'tabSettingsBtn') {
                 loadSettings();
             } else if (tabId === 'tabRecycleBtn') {
