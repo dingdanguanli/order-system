@@ -50,6 +50,8 @@
         .btn-action { padding: 6px 16px; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; font-weight: 500; }
         .btn-confirm-pay { background: #22c55e; color: white; }
         .btn-confirm-modify { background: #ff6b00; color: white; }
+        .btn-save-setting { padding: 10px 20px; background: #4a6cf7; color: white; border: none; border-radius: 8px; font-size: 15px; cursor: pointer; font-weight: 500; }
+        .btn-save-setting:active { background: #3a56d4; }
         .modified-tag { color: #ff6b00; font-size: 12px; background: #fff3cd; padding: 2px 8px; border-radius: 4px; }
         .header-right { display: flex; gap: 8px; align-items: center; }
         .modify-compare { background: #fff8e1; border-radius: 6px; padding: 8px 10px; margin-top: 6px; font-size: 13px; border-left: 3px solid #ff6b00; }
@@ -57,6 +59,16 @@
         .modify-compare .new { color: #22c55e; font-weight: 500; }
         .modify-compare .label { color: #666; font-weight: 500; }
         .modify-compare .field-label { color: #333; font-weight: 500; }
+        .tab-bar { display: flex; gap: 4px; margin-bottom: 12px; background: white; border-radius: 10px; padding: 4px; }
+        .tab-bar button { flex: 1; padding: 8px; border: none; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; background: transparent; color: #999; }
+        .tab-bar button.active { background: #4a6cf7; color: white; }
+        .settings-area { background: white; border-radius: 14px; padding: 16px; margin-bottom: 12px; }
+        .settings-area .form-group { margin-bottom: 12px; }
+        .settings-area .form-group label { display: block; font-size: 14px; color: #666; margin-bottom: 4px; font-weight: 500; }
+        .settings-area .form-group input, .settings-area .form-group textarea { width: 100%; padding: 10px 12px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 14px; font-family: inherit; }
+        .settings-area .form-group textarea { min-height: 60px; resize: vertical; }
+        .settings-area .preview-img { max-width: 100%; max-height: 150px; border-radius: 8px; margin-top: 6px; border: 1px solid #eee; }
+        .settings-hint { font-size: 12px; color: #999; margin-top: 4px; }
     </style>
 </head>
 <body>
@@ -82,24 +94,61 @@
 
     <div id="adminPanel" style="display:none;">
         <div class="header">
-            <div><h1>📦 代理订单查看</h1><span class="info" id="agentInfo">加载中...</span></div>
+            <div><h1>📦 代理后台</h1><span class="info" id="agentInfo">加载中...</span></div>
             <div class="header-right">
                 <button class="refresh-btn" onclick="doRefresh()">🔄 刷新</button>
                 <button class="logout-btn" onclick="doLogout()">退出</button>
             </div>
         </div>
-        <div class="readonly-tip">🔒 你可以查看订单，确认收款和确认修改</div>
-        <div class="stats" id="statsBar">
-            <span class="stat-item active" data-status="all" onclick="loadOrders('all',this)">全部 <span class="num" id="countAll">0</span></span>
-            <span class="stat-item" data-status="0" onclick="loadOrders('0',this)">⏳ 待付款 <span class="num" id="count0">0</span></span>
-            <span class="stat-item" data-status="1" onclick="loadOrders('1',this)">💰 已付款待确认 <span class="num" id="count1">0</span></span>
-            <span class="stat-item" data-status="2" onclick="loadOrders('2',this)">✏️ 已修改待代理确认 <span class="num" id="count2">0</span></span>
-            <span class="stat-item" data-status="3" onclick="loadOrders('3',this)">✏️ 已修改待总后台确认 <span class="num" id="count3">0</span></span>
-            <span class="stat-item" data-status="4" onclick="loadOrders('4',this)">✅ 已收款待发货 <span class="num" id="count4">0</span></span>
-            <span class="stat-item" data-status="5" onclick="loadOrders('5',this)">📦 已发货 <span class="num" id="count5">0</span></span>
-            <span class="stat-item" data-status="6" onclick="loadOrders('6',this)">❌ 已拒绝 <span class="num" id="count6">0</span></span>
+
+        <!-- Tab 切换 -->
+        <div class="tab-bar">
+            <button class="active" onclick="switchTab('orders')" id="tabOrdersBtn">📋 订单管理</button>
+            <button onclick="switchTab('settings')" id="tabSettingsBtn">⚙️ 客服设置</button>
         </div>
-        <div id="orderList"></div>
+
+        <!-- Tab1：订单管理 -->
+        <div id="tabOrders" class="tab-content">
+            <div class="readonly-tip">🔒 你可以查看订单，确认收款和确认修改</div>
+            <div class="stats" id="statsBar">
+                <span class="stat-item active" data-status="all" onclick="loadOrders('all',this)">全部 <span class="num" id="countAll">0</span></span>
+                <span class="stat-item" data-status="0" onclick="loadOrders('0',this)">⏳ 待付款 <span class="num" id="count0">0</span></span>
+                <span class="stat-item" data-status="1" onclick="loadOrders('1',this)">💰 已付款待确认 <span class="num" id="count1">0</span></span>
+                <span class="stat-item" data-status="2" onclick="loadOrders('2',this)">✏️ 已修改待代理确认 <span class="num" id="count2">0</span></span>
+                <span class="stat-item" data-status="3" onclick="loadOrders('3',this)">✏️ 已修改待总后台确认 <span class="num" id="count3">0</span></span>
+                <span class="stat-item" data-status="4" onclick="loadOrders('4',this)">✅ 已收款待发货 <span class="num" id="count4">0</span></span>
+                <span class="stat-item" data-status="5" onclick="loadOrders('5',this)">📦 已发货 <span class="num" id="count5">0</span></span>
+                <span class="stat-item" data-status="6" onclick="loadOrders('6',this)">❌ 已拒绝 <span class="num" id="count6">0</span></span>
+            </div>
+            <div id="orderList"></div>
+        </div>
+
+        <!-- Tab2：客服设置 -->
+        <div id="tabSettings" class="tab-content" style="display:none;">
+            <div class="settings-area">
+                <h3 style="margin-bottom:12px;font-size:16px;color:#333;">⚙️ 客服信息设置</h3>
+                <p style="color:#999;font-size:13px;margin-bottom:12px;">修改后，客户下单页面会实时更新</p>
+                <div class="form-group">
+                    <label>QQ号码</label>
+                    <input id="settingQQ" placeholder="请输入QQ号码">
+                </div>
+                <div class="form-group">
+                    <label>微信号</label>
+                    <input id="settingWechat" placeholder="请输入微信号">
+                </div>
+                <div class="form-group">
+                    <label>微信二维码图片 URL</label>
+                    <input id="settingQrCode" placeholder="https://example.com/qrcode.jpg">
+                    <div id="qrPreview"></div>
+                    <div class="settings-hint">去图床（如 imgse.com）上传二维码图片，复制直链粘贴到这里</div>
+                </div>
+                <div class="form-group">
+                    <label>欢迎语（选填）</label>
+                    <textarea id="settingWelcome" placeholder="如：欢迎光临，有任何问题随时联系我"></textarea>
+                </div>
+                <button class="btn-save-setting" onclick="saveSettings()">💾 保存客服设置</button>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -119,7 +168,15 @@ function showToast(msg) {
 
 function doRefresh() {
     if (confirm('确定刷新数据吗？')) {
-        loadOrders('all');
+        var activeTab = document.querySelector('.tab-bar button.active');
+        if (activeTab) {
+            var tabId = activeTab.id;
+            if (tabId === 'tabOrdersBtn') {
+                loadOrders('all');
+            } else if (tabId === 'tabSettingsBtn') {
+                loadSettings();
+            }
+        }
         showToast('✅ 数据已刷新');
     }
 }
@@ -132,8 +189,9 @@ function doLogin() {
         document.getElementById('loginBox').style.display = 'none';
         document.getElementById('adminPanel').style.display = 'block';
         document.getElementById('loginError').style.display = 'none';
-        document.getElementById('agentInfo').textContent = AGENT_NAMES[agentId] + '（只读）';
+        document.getElementById('agentInfo').textContent = AGENT_NAMES[agentId];
         loadOrders('all');
+        loadSettings();
     } else {
         document.getElementById('loginError').style.display = 'block';
         document.getElementById('pwdInput').value = '';
@@ -148,25 +206,20 @@ function doLogout() {
     document.getElementById('loginError').style.display = 'none';
 }
 
-async function loadOrders(status, el) {
-    document.querySelectorAll('#statsBar .stat-item').forEach(function(item) { item.classList.remove('active'); });
-    if (el) el.classList.add('active');
-    var list = document.getElementById('orderList');
-    list.innerHTML = '<div class="loading">⏳ 加载中...</div>';
-    try {
-        var resp = await fetch(API_BASE + '/api/agent/orders?agentId=' + currentAgentId + '&password=' + AGENT_PASSWORDS[currentAgentId]);
-        var data = await resp.json();
-        if (data.code === 401) { showToast('密码错误，请重新登录'); doLogout(); return; }
-        if (data.code === 200 && data.data) {
-            var orders = data.data;
-            if (status !== 'all') { orders = orders.filter(function(o) { return o.status === parseInt(status); }); }
-            renderOrders(orders);
-            updateCounts(data.data);
-        } else { list.innerHTML = '<div class="empty-tip">暂无订单</div>'; }
-    } catch(e) { list.innerHTML = '<div class="empty-tip">加载失败，请刷新</div>'; }
+function switchTab(tab) {
+    document.querySelectorAll('.tab-bar button').forEach(function(b) { b.classList.remove('active'); });
+    document.querySelectorAll('.tab-content').forEach(function(c) { c.style.display = 'none'; });
+    if (tab === 'orders') {
+        document.getElementById('tabOrdersBtn').classList.add('active');
+        document.getElementById('tabOrders').style.display = 'block';
+        loadOrders('all');
+    } else if (tab === 'settings') {
+        document.getElementById('tabSettingsBtn').classList.add('active');
+        document.getElementById('tabSettings').style.display = 'block';
+        loadSettings();
+    }
 }
 
-// 格式化修改历史 - 和总后台一模一样
 function formatModifyHistory(modifyHistory) {
     if (!modifyHistory) return '';
     try {
@@ -201,6 +254,24 @@ function formatModifyHistory(modifyHistory) {
     }
 }
 
+async function loadOrders(status, el) {
+    document.querySelectorAll('#statsBar .stat-item').forEach(function(item) { item.classList.remove('active'); });
+    if (el) el.classList.add('active');
+    var list = document.getElementById('orderList');
+    list.innerHTML = '<div class="loading">⏳ 加载中...</div>';
+    try {
+        var resp = await fetch(API_BASE + '/api/agent/orders?agentId=' + currentAgentId + '&password=' + AGENT_PASSWORDS[currentAgentId]);
+        var data = await resp.json();
+        if (data.code === 401) { showToast('密码错误，请重新登录'); doLogout(); return; }
+        if (data.code === 200 && data.data) {
+            var orders = data.data;
+            if (status !== 'all') { orders = orders.filter(function(o) { return o.status === parseInt(status); }); }
+            renderOrders(orders);
+            updateCounts(data.data);
+        } else { list.innerHTML = '<div class="empty-tip">暂无订单</div>'; }
+    } catch(e) { list.innerHTML = '<div class="empty-tip">加载失败，请刷新</div>'; }
+}
+
 function renderOrders(orders) {
     var list = document.getElementById('orderList');
     if (!orders || orders.length === 0) { list.innerHTML = '<div class="empty-tip">🎉 暂无订单</div>'; return; }
@@ -208,16 +279,13 @@ function renderOrders(orders) {
     var html = '';
     orders.forEach(function(order) {
         var actionsHtml = '';
-        // 状态1：已付款待确认 → 确认收款
         if (order.status === 1) {
             actionsHtml = '<button class="btn-action btn-confirm-pay" onclick="confirmPayment(' + order.id + ')">💰 确认收款</button>';
         }
-        // 状态2：已修改待代理确认 → 确认修改
         if (order.status === 2) {
             actionsHtml = '<button class="btn-action btn-confirm-modify" onclick="confirmModify(' + order.id + ')">✏️ 确认修改</button>';
         }
         var modifiedTag = order.customer_modified === 1 ? '<span class="modified-tag">✏️ 客户已修改</span>' : '';
-        // 显示修改对比内容（和总后台一样）
         var modifyHtml = '';
         if (order.modify_history) {
             modifyHtml = formatModifyHistory(order.modify_history);
@@ -265,6 +333,75 @@ async function confirmModify(orderId) {
         else { showToast(data.msg || '操作失败'); }
     } catch(e) { showToast('网络异常，请重试'); }
 }
+
+// ============================================================
+// 客服设置
+// ============================================================
+async function loadSettings() {
+    try {
+        var resp = await fetch(API_BASE + '/api/agent/config?agentId=' + currentAgentId);
+        var data = await resp.json();
+        if (data.code === 200) {
+            document.getElementById('settingQQ').value = data.data.qq || '';
+            document.getElementById('settingWechat').value = data.data.wechat || '';
+            document.getElementById('settingQrCode').value = data.data.qr_code_url || '';
+            document.getElementById('settingWelcome').value = data.data.welcome_text || '';
+            updateQrPreview(data.data.qr_code_url || '');
+        }
+    } catch(e) { console.error(e); }
+}
+
+function updateQrPreview(url) {
+    var preview = document.getElementById('qrPreview');
+    if (url) {
+        preview.innerHTML = '<img src="' + url + '" class="preview-img" onerror="this.style.display=\'none\'">';
+    } else {
+        preview.innerHTML = '';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    document.getElementById('settingQrCode').addEventListener('input', function() {
+        updateQrPreview(this.value);
+    });
+});
+
+async function saveSettings() {
+    var qq = document.getElementById('settingQQ').value.trim();
+    var wechat = document.getElementById('settingWechat').value.trim();
+    var qrCodeUrl = document.getElementById('settingQrCode').value.trim();
+    var welcomeText = document.getElementById('settingWelcome').value.trim();
+
+    try {
+        var resp = await fetch(API_BASE + '/api/agent/config/update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                agentId: currentAgentId,
+                password: AGENT_PASSWORDS[currentAgentId],
+                qq: qq,
+                wechat: wechat,
+                qrCodeUrl: qrCodeUrl,
+                welcomeText: welcomeText
+            })
+        });
+        var data = await resp.json();
+        if (data.code === 200) {
+            showToast('✅ 客服设置已保存');
+        } else {
+            showToast(data.msg || '保存失败');
+        }
+    } catch(e) {
+        showToast('网络异常，请重试');
+    }
+}
+
+window.doRefresh = doRefresh;
+window.confirmPayment = confirmPayment;
+window.confirmModify = confirmModify;
+window.saveSettings = saveSettings;
+window.switchTab = switchTab;
+window.loadOrders = loadOrders;
 </script>
 </body>
 </html>
