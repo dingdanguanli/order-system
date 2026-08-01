@@ -63,7 +63,7 @@
         .contact-area .welcome-text { margin-top: 8px; font-size: 13px; color: #999; }
         .contact-area .qq-number { font-size: 16px; font-weight: 600; color: #333; }
 
-        .stock-image { width: 100%; border-radius: 12px; margin-bottom: 16px; }
+        .stock-image { width: 100%; border-radius: 12px; margin-bottom: 16px; cursor: pointer; }
         .order-notice { background: #f8f9fa; border-radius: 10px; padding: 12px 16px; margin-top: 16px; font-size: 14px; color: #666; line-height: 1.8; border-left: 3px solid #4a6cf7; }
         .copy-btn { background: none; border: 1px solid #ddd; padding: 2px 12px; border-radius: 4px; font-size: 12px; cursor: pointer; color: #666; }
         .copy-btn:active { background: #f0f0f0; }
@@ -108,7 +108,7 @@
             overflow: auto;
             position: relative;
         }
-        .stock-modal-content img { max-width: 100%; max-height: 70vh; border-radius: 8px; }
+        .stock-modal-content img { max-width: 100%; max-height: 65vh; border-radius: 8px; cursor: pointer; }
         .stock-modal-close {
             position: absolute;
             top: 10px;
@@ -119,6 +119,18 @@
             background: none;
             border: none;
         }
+        .stock-modal-download {
+            display: block;
+            text-align: center;
+            margin-top: 10px;
+            font-size: 12px;
+            color: #4a6cf7;
+            cursor: pointer;
+            background: none;
+            border: none;
+            text-decoration: underline;
+        }
+        .stock-modal-download:active { color: #3a56d4; }
 
         .edit-modal {
             display: none;
@@ -387,6 +399,22 @@ function copyText(text) {
     }
 }
 
+function openImageFullscreen(url) {
+    var win = window.open('', '_blank', 'width=800,height=800');
+    win.document.write('<html><head><title>库存图片</title><style>body{margin:0;display:flex;justify-content:center;align-items:center;height:100vh;background:#000;}img{max-width:95%;max-height:95%;object-fit:contain;}</style></head><body><img src="' + url + '" alt="库存图片"></body></html>');
+    win.document.close();
+}
+
+function downloadImage(url) {
+    var link = document.createElement('a');
+    link.href = url;
+    link.download = '库存图片_' + new Date().getTime() + '.jpg';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    showToast('✅ 图片下载中...');
+}
+
 async function loadAgentConfig() {
     currentAgentId = getAgentId();
     try {
@@ -413,8 +441,12 @@ async function loadAgentConfig() {
                 html += '<div class="welcome-text">' + cfg.welcome_text + '</div>';
             }
             document.getElementById('contactContent').innerHTML = html || '<span style="color:#ccc;">暂无客服信息</span>';
-            if (cfg.stock_image_url) { document.getElementById('stockImageArea').innerHTML = '<img src="' + cfg.stock_image_url + '" class="stock-image" alt="库存图片">'; }
-            if (cfg.order_notice) { document.getElementById('orderNoticeArea').innerHTML = '<div class="order-notice">📌 <strong>下单须知</strong><br>' + cfg.order_notice.replace(/\n/g, '<br>') + '</div>'; }
+            if (cfg.stock_image_url) {
+                document.getElementById('stockImageArea').innerHTML = '<img src="' + cfg.stock_image_url + '" class="stock-image" alt="库存图片" onclick="openImageFullscreen(\'' + cfg.stock_image_url + '\')">';
+            }
+            if (cfg.order_notice) {
+                document.getElementById('orderNoticeArea').innerHTML = '<div class="order-notice">📌 <strong>下单须知</strong><br>' + cfg.order_notice.replace(/\n/g, '<br>') + '</div>';
+            }
         }
     } catch(e) { console.error(e); }
 }
@@ -567,12 +599,20 @@ async function openStock() {
         var resp = await fetch(API_BASE + '/api/agent/config?agentId=' + currentAgentId);
         var data = await resp.json();
         if (data.code === 200 && data.data && data.data.stock_image_url) {
-            body.innerHTML = '<img src="' + data.data.stock_image_url + '" alt="库存图片">';
-        } else { body.innerHTML = '<p style="color:#999;padding:20px;">暂无库存图片</p>'; }
-    } catch(e) { body.innerHTML = '<p style="color:#999;padding:20px;">加载失败</p>'; }
+            var url = data.data.stock_image_url;
+            body.innerHTML = '<img src="' + url + '" alt="库存图片" onclick="openImageFullscreen(\'' + url + '\')" style="cursor:pointer;max-width:100%;max-height:65vh;border-radius:8px;">';
+            body.innerHTML += '<button class="stock-modal-download" onclick="downloadImage(\'' + url + '\')">💾 下载图片</button>';
+        } else {
+            body.innerHTML = '<p style="color:#999;padding:20px;">暂无库存图片</p>';
+        }
+    } catch(e) {
+        body.innerHTML = '<p style="color:#999;padding:20px;">加载失败</p>';
+    }
 }
 
-function closeStock() { document.getElementById('stockModal').className = 'stock-modal'; }
+function closeStock() {
+    document.getElementById('stockModal').className = 'stock-modal';
+}
 
 document.addEventListener('DOMContentLoaded', function() {
     initProvince();
@@ -604,6 +644,8 @@ window.openStock = openStock;
 window.closeStock = closeStock;
 window.doRefresh = doRefresh;
 window.copyText = copyText;
+window.openImageFullscreen = openImageFullscreen;
+window.downloadImage = downloadImage;
 </script>
 </body>
 </html>
