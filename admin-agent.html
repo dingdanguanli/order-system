@@ -306,6 +306,20 @@ async function loadOrders(status, el, search) {
     } catch(e) { list.innerHTML = '<div class="empty-tip">加载失败，请刷新</div>'; }
 }
 
+function copyText(text) {
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(text).then(function() { showToast('✅ 已复制'); });
+    } else {
+        var ta = document.createElement('textarea');
+        ta.value = text;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        showToast('✅ 已复制');
+    }
+}
+
 function renderOrders(orders) {
     var list = document.getElementById('orderList');
     if (!orders || orders.length === 0) { list.innerHTML = '<div class="empty-tip">🎉 暂无订单</div>'; return; }
@@ -324,7 +338,11 @@ function renderOrders(orders) {
         if (order.modify_history) {
             modifyHtml = formatModifyHistory(order.modify_history);
         }
-        html += '<div class="order-card"><div class="top"><div><span class="badge s' + order.status + '">' + statusMap[order.status] + '</span><span class="name">' + order.customer_name + '</span><span class="phone">' + order.customer_phone + '</span>' + modifiedTag + '</div><span class="time">' + (order.created_at||'') + '</span></div><div class="info"><div>📍 ' + (order.province||'') + (order.city||'') + (order.district||'') + ' ' + (order.detail_address||'') + '</div><div>📝 ' + (order.product_note||'无备注') + '</div>' + (order.tracking_number ? '<div>📮 运单号：<span class="tracking">' + order.tracking_number + '</span></div>' : '') + (order.pickup_code ? '<div>🔑 取件码：<span class="pickup">' + order.pickup_code + '</span></div>' : '') + (order.admin_remark ? '<div>💬 商家备注：' + order.admin_remark + '</div>' : '') + modifyHtml + '</div>' + (actionsHtml ? '<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">' + actionsHtml + '</div>' : '') + '</div>';
+        var trackingHtml = '';
+        if (order.tracking_number) {
+            trackingHtml = '<div>📮 运单号：<span class="tracking">' + order.tracking_number + '</span> <button class="copy-btn" onclick="copyText(\'' + order.tracking_number + '\')">复制</button></div>';
+        }
+        html += '<div class="order-card"><div class="top"><div><span class="badge s' + order.status + '">' + statusMap[order.status] + '</span><span class="name">' + order.customer_name + '</span><span class="phone">' + order.customer_phone + '</span>' + modifiedTag + '</div><span class="time">' + (order.created_at||'') + '</span></div><div class="info"><div>📍 ' + (order.province||'') + (order.city||'') + (order.district||'') + ' ' + (order.detail_address||'') + '</div><div>📝 ' + (order.product_note||'无备注') + '</div>' + trackingHtml + (order.pickup_code ? '<div>🔑 取件码：<span class="pickup">' + order.pickup_code + '</span></div>' : '') + (order.admin_remark ? '<div>💬 商家备注：' + order.admin_remark + '</div>' : '') + modifyHtml + '</div>' + (actionsHtml ? '<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">' + actionsHtml + '</div>' : '') + '</div>';
     });
     list.innerHTML = html;
 }
@@ -435,6 +453,7 @@ window.confirmModify = confirmModify;
 window.saveSettings = saveSettings;
 window.switchTab = switchTab;
 window.loadOrders = loadOrders;
+window.copyText = copyText;
 </script>
 </body>
 </html>
