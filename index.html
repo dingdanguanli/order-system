@@ -371,13 +371,13 @@ async function loadAgentConfig() {
             var cfg = data.data;
             document.getElementById('agentDisplay').textContent = '🏪 ' + cfg.agent_name;
             var html = '';
-            // QQ
+            // QQ显示号码 + 复制按钮
             if (cfg.qq) {
                 html += '<div style="margin-bottom:6px;">';
                 html += '<div style="font-size:14px;color:#666;margin-bottom:4px;">📱 QQ号码：<span class="qq-number">' + cfg.qq + '</span> <button class="copy-btn" onclick="copyText(\'' + cfg.qq + '\')">复制</button></div>';
                 html += '</div>';
             }
-            // 微信号（样式和QQ一致）
+            // 微信号显示 + 复制按钮（样式与QQ一致）
             if (cfg.wechat) {
                 html += '<div style="margin-bottom:6px;">';
                 html += '<div style="font-size:14px;color:#666;margin-bottom:4px;">📱 微信号：<span class="qq-number">' + cfg.wechat + '</span> <button class="copy-btn" onclick="copyText(\'' + cfg.wechat + '\')">复制</button></div>';
