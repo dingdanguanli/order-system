@@ -452,14 +452,20 @@ function renderOrders(orders) {
         if (order.modify_history) {
             modifyHtml = formatModifyHistory(order.modify_history);
         }
-        html += '<div class="order-card" data-id="' + order.id + '"><div class="top"><div class="checkbox-cell"><input type="checkbox" class="order-checkbox" data-id="' + order.id + '" onchange="updateSelectedCount()"> <span class="badge s' + order.status + '">' + statusMap[order.status] + '</span><span class="name">' + order.customer_name + '</span><span class="phone">' + order.customer_phone + '</span><span class="agent-tag">' + agentNames[order.agent_id] + '</span>' + modifiedTag + '</div><span class="time">' + (order.created_at || '') + '</span></div><div class="info"><div>📍 ' + (order.province||'') + (order.city||'') + (order.district||'') + ' ' + (order.detail_address||'') + '</div><div>📝 ' + (order.product_note || '无备注') + '</div>' + (order.tracking_number ? '<div>📮 运单号：' + order.tracking_number + '</div>' : '') + (order.pickup_code ? '<div>🔑 取件码：' + order.pickup_code + '</div>' : '') + (order.admin_remark ? '<div>💬 备注：' + order.admin_remark + '</div>' : '') + modifyHtml + '</div><div class="bottom"><select onchange="updateOrder(' + order.id + ', \'status\', this.value)"><option value="0" ' + (order.status===0?'selected':'') + '>待付款</option><option value="1" ' + (order.status===1?'selected':'') + '>已付款待确认</option><option value="2" ' + (order.status===2?'selected':'') + '>已修改待代理确认</option><option value="3" ' + (order.status===3?'selected':'') + '>已修改待总后台确认</option><option value="4" ' + (order.status===4?'selected':'') + '>已收款待发货</option><option value="5" ' + (order.status===5?'selected':'') + '>已发货</option><option value="6" ' + (order.status===6?'selected':'') + '>已拒绝</option></select><input type="text" placeholder="运单号" value="' + (order.tracking_number||'') + '" onkeydown="if(event.keyCode===13)updateOrder(' + order.id + ', \'tracking_number\', this.value)"><input type="text" placeholder="取件码" value="' + (order.pickup_code||'') + '" onkeydown="if(event.keyCode===13)updateOrder(' + order.id + ', \'pickup_code\', this.value)"><input type="text" placeholder="备注" value="' + (order.admin_remark||'') + '" onkeydown="if(event.keyCode===13)updateOrder(' + order.id + ', \'admin_remark\', this.value)"><button class="btn-save" onclick="updateOrder(' + order.id + ')">💾 保存</button>' + actionButtons + '</div></div>';
+        html += '<div class="order-card" data-id="' + order.id + '"><div class="top"><div class="checkbox-cell"><input type="checkbox" class="order-checkbox" data-id="' + order.id + '" onchange="updateSelectedCount()"> <span class="badge s' + order.status + '">' + statusMap[order.status] + '</span><span class="name">' + order.customer_name + '</span><span class="phone">' + order.customer_phone + '</span><span class="agent-tag">' + agentNames[order.agent_id] + '</span>' + modifiedTag + '</div><span class="time">' + (order.created_at || '') + '</span></div><div class="info"><div>📍 ' + (order.province||'') + (order.city||'') + (order.district||'') + ' ' + (order.detail_address||'') + '</div><div>📝 ' + (order.product_note || '无备注') + '</div>' + (order.tracking_number ? '<div>📮 运单号：' + order.tracking_number + '</div>' : '') + (order.pickup_code ? '<div>🔑 取件码：' + order.pickup_code + '</div>' : '') + (order.admin_remark ? '<div>💬 备注：' + order.admin_remark + '</div>' : '') + modifyHtml + '</div><div class="bottom"><select onchange="updateOrder(' + order.id + ')"><option value="0" ' + (order.status===0?'selected':'') + '>待付款</option><option value="1" ' + (order.status===1?'selected':'') + '>已付款待确认</option><option value="2" ' + (order.status===2?'selected':'') + '>已修改待代理确认</option><option value="3" ' + (order.status===3?'selected':'') + '>已修改待总后台确认</option><option value="4" ' + (order.status===4?'selected':'') + '>已收款待发货</option><option value="5" ' + (order.status===5?'selected':'') + '>已发货</option><option value="6" ' + (order.status===6?'selected':'') + '>已拒绝</option></select><input type="text" placeholder="运单号" value="' + (order.tracking_number||'') + '" onkeydown="if(event.keyCode===13)updateOrderSingle(' + order.id + ', \'tracking_number\', this.value)"><input type="text" placeholder="取件码" value="' + (order.pickup_code||'') + '" onkeydown="if(event.keyCode===13)updateOrderSingle(' + order.id + ', \'pickup_code\', this.value)"><input type="text" placeholder="备注" value="' + (order.admin_remark||'') + '" onkeydown="if(event.keyCode===13)updateOrderSingle(' + order.id + ', \'admin_remark\', this.value)"><button class="btn-save" onclick="updateOrder(' + order.id + ')">💾 保存</button>' + actionButtons + '</div></div>';
     });
     list.innerHTML = html;
     updateSelectedCount();
 }
 
-async function updateOrder(id, field, value) {
-    if (field) { return; }
+async function updateOrderSingle(id, field, value) {
+    clearTimeout(window._updateTimer);
+    window._updateTimer = setTimeout(function() {
+        doUpdateOrder(id);
+    }, 500);
+}
+
+async function updateOrder(id) {
     doUpdateOrder(id);
 }
 
@@ -468,10 +474,12 @@ async function doUpdateOrder(id) {
     if (!card) return;
     var select = card.querySelector('select');
     var inputs = card.querySelectorAll('input');
-    var status = parseInt(select.value);
+    // 顺序：0=运单号，1=取件码，2=备注
     var trackingNumber = inputs[0].value.trim();
     var pickupCode = inputs[1].value.trim();
     var adminRemark = inputs[2].value.trim();
+    var status = parseInt(select.value);
+    
     var btn = card.querySelector('.btn-save');
     btn.textContent = '⏳';
     btn.disabled = true;
