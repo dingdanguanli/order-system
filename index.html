@@ -479,7 +479,7 @@ function downloadImage(url) {
 }
 
 // ===== 物流查询功能 =====
-function queryTrack(trackingNumber, customerPhone) {
+function queryTrack(trackingNumber, recipientPhone, customerPhone) {
     if (!trackingNumber || trackingNumber.trim() === '') {
         showToast('❌ 运单号为空，无法查询');
         return;
@@ -490,18 +490,20 @@ function queryTrack(trackingNumber, customerPhone) {
     modal.className = 'track-modal show';
     result.innerHTML = '<div class="track-loading">⏳ 查询中...</div>';
     
-    // 取手机号后4位（如果有）
+    // 优先用收件人手机号，如果没有则用下单人手机号（兼容旧订单）
+    var phoneForTrack = recipientPhone || customerPhone || '';
     var phoneTail = '';
-    if (customerPhone && customerPhone.length >= 4) {
-        phoneTail = customerPhone.slice(-4);
+    if (phoneForTrack && phoneForTrack.length >= 4) {
+        phoneTail = phoneForTrack.slice(-4);
     }
     
-    var url = TRACK_API + '?kdhh=' + encodeURIComponent(trackingNumber.trim());
+    var url = TRACK_API + '?kddh=' + encodeURIComponent(trackingNumber.trim());
     if (phoneTail) {
         url += '&tel=' + phoneTail;
     }
     
     console.log('物流查询URL:', url);
+    console.log('查物流用的手机号:', phoneForTrack, '尾号:', phoneTail);
     
     fetch(url, {
         headers: {
@@ -526,7 +528,6 @@ function queryTrack(trackingNumber, customerPhone) {
 function renderTrackResult(data, trackingNumber, phoneTail) {
     var result = document.getElementById('trackResult');
     
-    // 检查是否成功
     if (data.code && data.code !== 0 && data.code !== 200) {
         result.innerHTML = '<div class="track-error">❌ ' + (data.msg || data.message || '查询失败') + '</div>';
         return;
@@ -680,9 +681,10 @@ async function doQuery() {
                 if (o.product_note) remarks += '<div>📝 客户备注：' + o.product_note + '</div>';
                 if (o.admin_remark) remarks += '<div>💬 商家备注：' + o.admin_remark + '</div>';
 
+                var recipientPhone = o.recipient_phone || '';
                 var trackingHtml = '';
                 if (o.tracking_number) {
-                    trackingHtml = '<div>📮 运单号：<span class="tracking">' + o.tracking_number + '</span> <button class="copy-btn" onclick="copyText(\'' + o.tracking_number + '\')">复制</button> <button class="track-btn" onclick="queryTrack(\'' + o.tracking_number + '\', \'' + o.customer_phone + '\')">📦 查物流</button></div>';
+                    trackingHtml = '<div>📮 运单号：<span class="tracking">' + o.tracking_number + '</span> <button class="copy-btn" onclick="copyText(\'' + o.tracking_number + '\')">复制</button> <button class="track-btn" onclick="queryTrack(\'' + o.tracking_number + '\', \'' + recipientPhone + '\', \'' + o.customer_phone + '\')">📦 查物流</button></div>';
                 }
 
                 html += '<div class="order-item"><div class="top"><span><span class="status ' + statusCls[o.status] + '">' + statusMap[o.status] + '</span> <strong>' + o.customer_name + '</strong></span><span style="color:#999;font-size:12px;">' + (o.created_at || '') + '</span></div><div class="info"><div>📍 ' + (o.province||'') + (o.city||'') + (o.district||'') + ' ' + (o.detail_address||'') + '</div>' + remarks + trackingHtml + (o.pickup_code ? '<div>🔑 取件码：<span class="pickup">' + o.pickup_code + '</span></div>' : '') + '</div>' + (actions ? '<div class="actions">' + actions + '</div>' : '') + '</div>';
