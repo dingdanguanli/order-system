@@ -67,6 +67,8 @@
         .order-notice { background: #f8f9fa; border-radius: 10px; padding: 12px 16px; margin-top: 16px; font-size: 14px; color: #666; line-height: 1.8; border-left: 3px solid #4a6cf7; }
         .copy-btn { background: none; border: 1px solid #ddd; padding: 2px 12px; border-radius: 4px; font-size: 12px; cursor: pointer; color: #666; }
         .copy-btn:active { background: #f0f0f0; }
+        .track-btn { background: none; border: 1px solid #4a6cf7; padding: 2px 12px; border-radius: 4px; font-size: 12px; cursor: pointer; color: #4a6cf7; }
+        .track-btn:active { background: #eef2ff; }
 
         .stock-fab {
             position: fixed;
@@ -188,6 +190,58 @@
         .header-right { display: flex; gap: 8px; align-items: center; justify-content: flex-end; margin-top: 8px; }
         .header-right .refresh-top { background: none; border: 1px solid #4a6cf7; color: #4a6cf7; padding: 4px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; }
         .header-right .refresh-top:active { background: #eef2ff; }
+
+        /* 物流弹窗 */
+        .track-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.6);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        .track-modal.show { display: flex; }
+        .track-modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+        }
+        .track-modal-close {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            font-size: 24px;
+            cursor: pointer;
+            color: #999;
+            background: none;
+            border: none;
+        }
+        .track-item {
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+            font-size: 14px;
+            color: #333;
+            line-height: 1.6;
+        }
+        .track-item:last-child { border-bottom: none; }
+        .track-item .time { color: #999; font-size: 12px; }
+        .track-item .desc { color: #333; }
+        .track-item .status-current { color: #22c55e; font-weight: 600; }
+        .track-loading { text-align: center; color: #999; padding: 30px 0; }
+        .track-empty { text-align: center; color: #ccc; padding: 30px 0; }
+        .track-error { text-align: center; color: #ff4757; padding: 30px 0; }
+        .track-company { font-size: 14px; color: #666; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 2px solid #eee; }
+        .track-company strong { color: #333; }
     </style>
 </head>
 <body>
@@ -263,8 +317,19 @@
     </div>
 </div>
 
+<!-- 物流查询弹窗 -->
+<div class="track-modal" id="trackModal">
+    <div class="track-modal-content">
+        <button class="track-modal-close" id="trackModalClose">✕</button>
+        <h3 style="margin-bottom:12px;">📦 物流信息</h3>
+        <div id="trackResult"></div>
+    </div>
+</div>
+
 <script>
 var API_BASE = 'https://order-api.dingdanguanli.workers.dev';
+var TRACK_API = 'https://chawuliu.market.alicloudapi.com/query';
+var APP_CODE = '205031470';
 var currentAgentId = 1;
 var editingOrderId = null;
 
@@ -415,6 +480,95 @@ function downloadImage(url) {
     showToast('✅ 图片下载中...');
 }
 
+// ===== 物流查询功能 =====
+function queryTrack(trackingNumber) {
+    if (!trackingNumber || trackingNumber.trim() === '') {
+        showToast('❌ 运单号为空，无法查询');
+        return;
+    }
+    
+    var modal = document.getElementById('trackModal');
+    var result = document.getElementById('trackResult');
+    modal.className = 'track-modal show';
+    result.innerHTML = '<div class="track-loading">⏳ 查询中...</div>';
+    
+    var url = TRACK_API + '?kdhh=' + encodeURIComponent(trackingNumber.trim());
+    
+    fetch(url, {
+        headers: {
+            'Authorization': 'APPCODE ' + APP_CODE
+        }
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+        console.log('物流查询返回:', data);
+        // 根据拇指云实际返回格式渲染
+        renderTrackResult(data, trackingNumber);
+    })
+    .catch(function(err) {
+        result.innerHTML = '<div class="track-error">❌ 查询失败：' + err.message + '</div>';
+    });
+}
+
+function renderTrackResult(data, trackingNumber) {
+    var result = document.getElementById('trackResult');
+    
+    // 如果返回错误
+    if (data.code && data.code !== 0 && data.code !== 200) {
+        result.innerHTML = '<div class="track-error">❌ ' + (data.msg || data.message || '查询失败') + '</div>';
+        return;
+    }
+    
+    // 尝试多种返回格式
+    var company = data.com || data.company || data.expName || data.express_name || '';
+    var status = data.status || data.state || '';
+    var traces = data.data || data.traces || data.list || data.track || data.result || [];
+    
+    // 如果是对象格式的traces
+    if (traces && typeof traces === 'object' && !Array.isArray(traces)) {
+        var temp = [];
+        for (var key in traces) {
+            if (traces.hasOwnProperty(key)) {
+                temp.push(traces[key]);
+            }
+        }
+        traces = temp;
+    }
+    
+    var html = '';
+    html += '<div class="track-company"><strong>📮 运单号：</strong>' + trackingNumber;
+    if (company) {
+        html += ' &nbsp;|&nbsp; <strong>快递公司：</strong>' + company;
+    }
+    if (status) {
+        html += ' &nbsp;|&nbsp; <strong>状态：</strong>' + status;
+    }
+    html += '</div>';
+    
+    if (traces && traces.length > 0) {
+        for (var i = 0; i < traces.length; i++) {
+            var item = traces[i];
+            var time = item.time || item.acceptTime || item.datetime || '';
+            var desc = item.desc || item.content || item.remark || item.msg || item.context || '';
+            var isCurrent = (i === 0);
+            html += '<div class="track-item">';
+            html += '<div class="time">' + time + '</div>';
+            html += '<div class="desc' + (isCurrent ? ' status-current' : '') + '">' + desc + (isCurrent ? ' ✅' : '') + '</div>';
+            html += '</div>';
+        }
+    } else {
+        html += '<div class="track-empty">📭 暂无物流轨迹</div>';
+    }
+    
+    result.innerHTML = html;
+}
+
+function closeTrack() {
+    document.getElementById('trackModal').className = 'track-modal';
+}
+
+// ===== 以上物流查询功能 =====
+
 async function loadAgentConfig() {
     currentAgentId = getAgentId();
     try {
@@ -513,7 +667,12 @@ async function doQuery() {
                 if (o.product_note) remarks += '<div>📝 客户备注：' + o.product_note + '</div>';
                 if (o.admin_remark) remarks += '<div>💬 商家备注：' + o.admin_remark + '</div>';
 
-                html += '<div class="order-item"><div class="top"><span><span class="status ' + statusCls[o.status] + '">' + statusMap[o.status] + '</span> <strong>' + o.customer_name + '</strong></span><span style="color:#999;font-size:12px;">' + (o.created_at || '') + '</span></div><div class="info"><div>📍 ' + (o.province||'') + (o.city||'') + (o.district||'') + ' ' + (o.detail_address||'') + '</div>' + remarks + (o.tracking_number ? '<div>📮 运单号：<span class="tracking">' + o.tracking_number + '</span> <button class="copy-btn" onclick="copyText(\'' + o.tracking_number + '\')">复制</button></div>' : '') + (o.pickup_code ? '<div>🔑 取件码：<span class="pickup">' + o.pickup_code + '</span></div>' : '') + '</div>' + (actions ? '<div class="actions">' + actions + '</div>' : '') + '</div>';
+                var trackingHtml = '';
+                if (o.tracking_number) {
+                    trackingHtml = '<div>📮 运单号：<span class="tracking">' + o.tracking_number + '</span> <button class="copy-btn" onclick="copyText(\'' + o.tracking_number + '\')">复制</button> <button class="track-btn" onclick="queryTrack(\'' + o.tracking_number + '\')">📦 查物流</button></div>';
+                }
+
+                html += '<div class="order-item"><div class="top"><span><span class="status ' + statusCls[o.status] + '">' + statusMap[o.status] + '</span> <strong>' + o.customer_name + '</strong></span><span style="color:#999;font-size:12px;">' + (o.created_at || '') + '</span></div><div class="info"><div>📍 ' + (o.province||'') + (o.city||'') + (o.district||'') + ' ' + (o.detail_address||'') + '</div>' + remarks + trackingHtml + (o.pickup_code ? '<div>🔑 取件码：<span class="pickup">' + o.pickup_code + '</span></div>' : '') + '</div>' + (actions ? '<div class="actions">' + actions + '</div>' : '') + '</div>';
             }
             list.innerHTML = html;
         } else {
@@ -631,6 +790,8 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('editModalClose').addEventListener('click', closeEdit);
     document.getElementById('editModal').addEventListener('click', function(e) { if (e.target === this) closeEdit(); });
     document.getElementById('submitEditBtn').addEventListener('click', submitEdit);
+    document.getElementById('trackModalClose').addEventListener('click', closeTrack);
+    document.getElementById('trackModal').addEventListener('click', function(e) { if (e.target === this) closeTrack(); });
     loadAgentConfig();
 });
 
@@ -646,6 +807,8 @@ window.doRefresh = doRefresh;
 window.copyText = copyText;
 window.openImageFullscreen = openImageFullscreen;
 window.downloadImage = downloadImage;
+window.queryTrack = queryTrack;
+window.closeTrack = closeTrack;
 </script>
 </body>
 </html>
