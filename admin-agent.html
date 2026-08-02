@@ -82,7 +82,6 @@
         .track-btn { background: none; border: 1px solid #4a6cf7; padding: 2px 12px; border-radius: 4px; font-size: 12px; cursor: pointer; color: #4a6cf7; }
         .track-btn:active { background: #eef2ff; }
 
-        /* 物流弹窗 */
         .track-modal {
             display: none;
             position: fixed;
@@ -219,7 +218,6 @@
     </div>
 </div>
 
-<!-- 物流查询弹窗 -->
 <div class="track-modal" id="trackModal">
     <div class="track-modal-content">
         <button class="track-modal-close" id="trackModalClose">✕</button>
@@ -231,7 +229,7 @@
 <script>
 var API_BASE = 'https://order-api.dingdanguanli.workers.dev';
 var TRACK_API = 'https://chawuliu.market.alicloudapi.com/query';
-var APP_CODE = '205031470';
+var APP_CODE = '8ef236b5d2dd4637aff2c97b5620b482';
 var AGENT_PASSWORDS = {1:'Aa1001',2:'Aa1002',3:'Aa1003',4:'Aa1004',5:'Aa1005',6:'Aa1006',7:'Aa1007',8:'Aa1008',9:'Aa1009',10:'Aa1010'};
 var AGENT_NAMES = {1:'深圳总仓1001',2:'深圳总仓1002',3:'深圳总仓1003',4:'深圳总仓1004',5:'深圳总仓1005',6:'深圳总仓1006',7:'深圳总仓1007',8:'深圳总仓1008',9:'深圳总仓1009',10:'深圳总仓1010'};
 var currentAgentId = 1;
@@ -365,7 +363,7 @@ function copyText(text) {
 }
 
 // ===== 物流查询功能 =====
-function queryTrack(trackingNumber) {
+function queryTrack(trackingNumber, customerPhone) {
     if (!trackingNumber || trackingNumber.trim() === '') {
         showToast('❌ 运单号为空，无法查询');
         return;
@@ -376,24 +374,39 @@ function queryTrack(trackingNumber) {
     modal.className = 'track-modal show';
     result.innerHTML = '<div class="track-loading">⏳ 查询中...</div>';
     
+    var phoneTail = '';
+    if (customerPhone && customerPhone.length >= 4) {
+        phoneTail = customerPhone.slice(-4);
+    }
+    
     var url = TRACK_API + '?kdhh=' + encodeURIComponent(trackingNumber.trim());
+    if (phoneTail) {
+        url += '&tel=' + phoneTail;
+    }
+    
+    console.log('物流查询URL:', url);
     
     fetch(url, {
         headers: {
             'Authorization': 'APPCODE ' + APP_CODE
         }
     })
-    .then(function(res) { return res.json(); })
+    .then(function(res) { 
+        if (!res.ok) {
+            throw new Error('HTTP ' + res.status + ': ' + res.statusText);
+        }
+        return res.json(); 
+    })
     .then(function(data) {
         console.log('物流查询返回:', data);
-        renderTrackResult(data, trackingNumber);
+        renderTrackResult(data, trackingNumber, phoneTail);
     })
     .catch(function(err) {
         result.innerHTML = '<div class="track-error">❌ 查询失败：' + err.message + '</div>';
     });
 }
 
-function renderTrackResult(data, trackingNumber) {
+function renderTrackResult(data, trackingNumber, phoneTail) {
     var result = document.getElementById('trackResult');
     
     if (data.code && data.code !== 0 && data.code !== 200) {
@@ -422,6 +435,9 @@ function renderTrackResult(data, trackingNumber) {
     }
     if (status) {
         html += ' &nbsp;|&nbsp; <strong>状态：</strong>' + status;
+    }
+    if (phoneTail) {
+        html += ' &nbsp;|&nbsp; <span style="color:#999;">📱 手机尾号：' + phoneTail + '</span>';
     }
     html += '</div>';
     
@@ -491,7 +507,7 @@ function renderOrders(orders) {
         }
         var trackingHtml = '';
         if (order.tracking_number) {
-            trackingHtml = '<div>📮 运单号：<span class="tracking">' + order.tracking_number + '</span> <button class="copy-btn" onclick="copyText(\'' + order.tracking_number + '\')">复制</button> <button class="track-btn" onclick="queryTrack(\'' + order.tracking_number + '\')">📦 查物流</button></div>';
+            trackingHtml = '<div>📮 运单号：<span class="tracking">' + order.tracking_number + '</span> <button class="copy-btn" onclick="copyText(\'' + order.tracking_number + '\')">复制</button> <button class="track-btn" onclick="queryTrack(\'' + order.tracking_number + '\', \'' + order.customer_phone + '\')">📦 查物流</button></div>';
         }
         html += '<div class="order-card"><div class="top"><div><span class="badge s' + order.status + '">' + statusMap[order.status] + '</span><span class="name">' + order.customer_name + '</span><span class="phone">' + order.customer_phone + '</span>' + modifiedTag + '</div><span class="time">' + (order.created_at||'') + '</span></div><div class="info"><div>📍 ' + (order.province||'') + (order.city||'') + (order.district||'') + ' ' + (order.detail_address||'') + '</div><div>📝 ' + (order.product_note||'无备注') + '</div>' + trackingHtml + (order.pickup_code ? '<div>🔑 取件码：<span class="pickup">' + order.pickup_code + '</span></div>' : '') + (order.admin_remark ? '<div>💬 商家备注：' + order.admin_remark + '</div>' : '') + modifyHtml + '</div>' + (actionsHtml ? '<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">' + actionsHtml + '</div>' : '') + '</div>';
     });
