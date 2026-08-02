@@ -359,7 +359,7 @@ function copyText(text) {
 }
 
 // ===== 物流查询功能 =====
-function queryTrack(trackingNumber, customerPhone) {
+function queryTrack(trackingNumber, recipientPhone, customerPhone) {
     if (!trackingNumber || trackingNumber.trim() === '') {
         showToast('❌ 运单号为空，无法查询');
         return;
@@ -370,17 +370,20 @@ function queryTrack(trackingNumber, customerPhone) {
     modal.className = 'track-modal show';
     result.innerHTML = '<div class="track-loading">⏳ 查询中...</div>';
     
+    // 优先用收件人手机号，如果没有则用下单人手机号（兼容旧订单）
+    var phoneForTrack = recipientPhone || customerPhone || '';
     var phoneTail = '';
-    if (customerPhone && customerPhone.length >= 4) {
-        phoneTail = customerPhone.slice(-4);
+    if (phoneForTrack && phoneForTrack.length >= 4) {
+        phoneTail = phoneForTrack.slice(-4);
     }
     
-    var url = TRACK_API + '?kdhh=' + encodeURIComponent(trackingNumber.trim());
+    var url = TRACK_API + '?kddh=' + encodeURIComponent(trackingNumber.trim());
     if (phoneTail) {
         url += '&tel=' + phoneTail;
     }
     
     console.log('物流查询URL:', url);
+    console.log('查物流用的手机号:', phoneForTrack, '尾号:', phoneTail);
     
     fetch(url, {
         headers: {
@@ -693,11 +696,13 @@ function renderOrders(orders) {
         if (order.modify_history) {
             modifyHtml = formatModifyHistory(order.modify_history);
         }
+        // 获取收件人手机号（用于查物流），如果没有则用下单人手机号
+        var recipientPhone = order.recipient_phone || '';
         var trackingHtml = '';
         if (order.tracking_number) {
-            trackingHtml = '<div>📮 运单号：' + order.tracking_number + ' <button class="copy-btn" onclick="copyText(\'' + order.tracking_number + '\')">复制</button> <button class="track-btn" onclick="queryTrack(\'' + order.tracking_number + '\', \'' + order.customer_phone + '\')">📦 查物流</button></div>';
+            trackingHtml = '<div>📮 运单号：' + order.tracking_number + ' <button class="copy-btn" onclick="copyText(\'' + order.tracking_number + '\')">复制</button> <button class="track-btn" onclick="queryTrack(\'' + order.tracking_number + '\', \'' + recipientPhone + '\', \'' + order.customer_phone + '\')">📦 查物流</button></div>';
         }
-        html += '<div class="order-card" data-id="' + order.id + '"><div class="top"><div class="checkbox-cell"><input type="checkbox" class="order-checkbox" data-id="' + order.id + '" onchange="updateSelectedCount()"> <span class="badge s' + order.status + '">' + statusMap[order.status] + '</span><span class="name">' + order.customer_name + '</span><span class="phone">' + order.customer_phone + '</span><span class="agent-tag">' + agentNames[order.agent_id] + '</span>' + modifiedTag + '</div><span class="time">' + (order.created_at || '') + '</span></div><div class="info"><div>📍 ' + (order.province||'') + (order.city||'') + (order.district||'') + ' ' + (order.detail_address||'') + '</div><div>📝 ' + (order.product_note || '无备注') + '</div>' + trackingHtml + (order.pickup_code ? '<div>🔑 取件码：' + order.pickup_code + '</div>' : '') + (order.admin_remark ? '<div>💬 备注：' + order.admin_remark + '</div>' : '') + modifyHtml + '</div><div class="bottom"><select id="s_' + order.id + '"><option value="0" ' + (order.status===0?'selected':'') + '>待付款</option><option value="1" ' + (order.status===1?'selected':'') + '>已付款待确认</option><option value="2" ' + (order.status===2?'selected':'') + '>已修改待代理确认</option><option value="3" ' + (order.status===3?'selected':'') + '>已修改待总后台确认</option><option value="4" ' + (order.status===4?'selected':'') + '>已收款待发货</option><option value="5" ' + (order.status===5?'selected':'') + '>已发货</option><option value="6" ' + (order.status===6?'selected':'') + '>已拒绝</option></select><input type="text" id="t_' + order.id + '" placeholder="运单号" value="' + (order.tracking_number||'') + '"><input type="text" id="p_' + order.id + '" placeholder="取件码" value="' + (order.pickup_code||'') + '"><input type="text" id="r_' + order.id + '" placeholder="备注" value="' + (order.admin_remark||'') + '"><button class="btn-save" onclick="saveOrder(' + order.id + ')">💾 保存</button>' + actionButtons + '</div></div>';
+        html += '<div class="order-card" data-id="' + order.id + '"><div class="top"><div class="checkbox-cell"><input type="checkbox" class="order-checkbox" data-id="' + order.id + '" onchange="updateSelectedCount()"> <span class="badge s' + order.status + '">' + statusMap[order.status] + '</span><span class="name">' + order.customer_name + '</span><span class="phone">' + order.customer_phone + '</span><span class="agent-tag">' + agentNames[order.agent_id] + '</span>' + modifiedTag + '</div><span class="time">' + (order.created_at || '') + '</span></div><div class="info"><div>📍 ' + (order.province||'') + (order.city||'') + (order.district||'') + ' ' + (order.detail_address||'') + '</div><div>📝 ' + (order.product_note || '无备注') + '</div>' + trackingHtml + (order.pickup_code ? '<div>🔑 取件码：' + order.pickup_code + '</div>' : '') + (order.admin_remark ? '<div>💬 备注：' + order.admin_remark + '</div>' : '') + modifyHtml + '</div><div class="bottom"><select id="s_' + order.id + '"><option value="0" ' + (order.status===0?'selected':'') + '>待付款</option><option value="1" ' + (order.status===1?'selected':'') + '>已付款待确认</option><option value="2" ' + (order.status===2?'selected':'') + '>已修改待代理确认</option><option value="3" ' + (order.status===3?'selected':'') + '>已修改待总后台确认</option><option value="4" ' + (order.status===4?'selected':'') + '>已收款待发货</option><option value="5" ' + (order.status===5?'selected':'') + '>已发货</option><option value="6" ' + (order.status===6?'selected':'') + '>已拒绝</option></select><input type="text" id="t_' + order.id + '" placeholder="运单号" value="' + (order.tracking_number||'') + '"><input type="text" id="rphone_' + order.id + '" placeholder="收件人手机号" value="' + (recipientPhone || '') + '" style="min-width:120px;flex:0.8;"><input type="text" id="p_' + order.id + '" placeholder="取件码" value="' + (order.pickup_code||'') + '"><input type="text" id="r_' + order.id + '" placeholder="备注" value="' + (order.admin_remark||'') + '"><button class="btn-save" onclick="saveOrder(' + order.id + ')">💾 保存</button>' + actionButtons + '</div></div>';
     });
     list.innerHTML = html;
     updateSelectedCount();
@@ -706,6 +711,7 @@ function renderOrders(orders) {
 async function saveOrder(id) {
     var statusVal = document.getElementById('s_' + id);
     var trackingVal = document.getElementById('t_' + id);
+    var recipientPhoneVal = document.getElementById('rphone_' + id);
     var pickupVal = document.getElementById('p_' + id);
     var remarkVal = document.getElementById('r_' + id);
     
@@ -716,6 +722,7 @@ async function saveOrder(id) {
     
     var status = parseInt(statusVal.value);
     var trackingNumber = trackingVal.value.trim();
+    var recipientPhone = recipientPhoneVal ? recipientPhoneVal.value.trim() : '';
     var pickupCode = pickupVal.value.trim();
     var adminRemark = remarkVal.value.trim();
     
@@ -735,7 +742,8 @@ async function saveOrder(id) {
                 status: status,
                 trackingNumber: trackingNumber,
                 pickupCode: pickupCode,
-                adminRemark: adminRemark
+                adminRemark: adminRemark,
+                recipientPhone: recipientPhone
             })
         });
         var data = await resp.json();
@@ -790,14 +798,23 @@ async function shipOrder(id) {
     var trackingNumber = trackingVal.value.trim();
     if (!trackingNumber) { showToast('请先填写运单号！'); return; }
     if (!confirm('确认发货吗？')) return;
+    var recipientPhoneVal = document.getElementById('rphone_' + id);
     var pickupVal = document.getElementById('p_' + id);
     var remarkVal = document.getElementById('r_' + id);
+    var recipientPhone = recipientPhoneVal ? recipientPhoneVal.value.trim() : '';
     var pickupCode = pickupVal ? pickupVal.value.trim() : '';
     var adminRemark = remarkVal ? remarkVal.value.trim() : '';
     try {
         var resp = await fetch(API_BASE + '/api/master/order/ship', {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ password: MASTER_PASSWORD, id: id, trackingNumber: trackingNumber, pickupCode: pickupCode, adminRemark: adminRemark })
+            body: JSON.stringify({ 
+                password: MASTER_PASSWORD, 
+                id: id, 
+                trackingNumber: trackingNumber, 
+                pickupCode: pickupCode, 
+                adminRemark: adminRemark,
+                recipientPhone: recipientPhone
+            })
         });
         var data = await resp.json();
         if (data.code === 200) { showToast('✅ 发货成功！'); loadOrders(currentStatus, document.querySelector('#statsBar .stat-item.active'), currentSearch); }
