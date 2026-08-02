@@ -191,7 +191,6 @@
         .header-right .refresh-top { background: none; border: 1px solid #4a6cf7; color: #4a6cf7; padding: 4px 12px; border-radius: 6px; font-size: 12px; cursor: pointer; }
         .header-right .refresh-top:active { background: #eef2ff; }
 
-        /* 物流弹窗 */
         .track-modal {
             display: none;
             position: fixed;
@@ -317,7 +316,6 @@
     </div>
 </div>
 
-<!-- 物流查询弹窗 -->
 <div class="track-modal" id="trackModal">
     <div class="track-modal-content">
         <button class="track-modal-close" id="trackModalClose">✕</button>
@@ -329,7 +327,7 @@
 <script>
 var API_BASE = 'https://order-api.dingdanguanli.workers.dev';
 var TRACK_API = 'https://chawuliu.market.alicloudapi.com/query';
-var APP_CODE = '205031470';
+var APP_CODE = '8ef236b5d2dd4637aff2c97b5620b482';
 var currentAgentId = 1;
 var editingOrderId = null;
 
@@ -481,7 +479,7 @@ function downloadImage(url) {
 }
 
 // ===== 物流查询功能 =====
-function queryTrack(trackingNumber) {
+function queryTrack(trackingNumber, customerPhone) {
     if (!trackingNumber || trackingNumber.trim() === '') {
         showToast('❌ 运单号为空，无法查询');
         return;
@@ -492,39 +490,52 @@ function queryTrack(trackingNumber) {
     modal.className = 'track-modal show';
     result.innerHTML = '<div class="track-loading">⏳ 查询中...</div>';
     
+    // 取手机号后4位（如果有）
+    var phoneTail = '';
+    if (customerPhone && customerPhone.length >= 4) {
+        phoneTail = customerPhone.slice(-4);
+    }
+    
     var url = TRACK_API + '?kdhh=' + encodeURIComponent(trackingNumber.trim());
+    if (phoneTail) {
+        url += '&tel=' + phoneTail;
+    }
+    
+    console.log('物流查询URL:', url);
     
     fetch(url, {
         headers: {
             'Authorization': 'APPCODE ' + APP_CODE
         }
     })
-    .then(function(res) { return res.json(); })
+    .then(function(res) { 
+        if (!res.ok) {
+            throw new Error('HTTP ' + res.status + ': ' + res.statusText);
+        }
+        return res.json(); 
+    })
     .then(function(data) {
         console.log('物流查询返回:', data);
-        // 根据拇指云实际返回格式渲染
-        renderTrackResult(data, trackingNumber);
+        renderTrackResult(data, trackingNumber, phoneTail);
     })
     .catch(function(err) {
         result.innerHTML = '<div class="track-error">❌ 查询失败：' + err.message + '</div>';
     });
 }
 
-function renderTrackResult(data, trackingNumber) {
+function renderTrackResult(data, trackingNumber, phoneTail) {
     var result = document.getElementById('trackResult');
     
-    // 如果返回错误
+    // 检查是否成功
     if (data.code && data.code !== 0 && data.code !== 200) {
         result.innerHTML = '<div class="track-error">❌ ' + (data.msg || data.message || '查询失败') + '</div>';
         return;
     }
     
-    // 尝试多种返回格式
     var company = data.com || data.company || data.expName || data.express_name || '';
     var status = data.status || data.state || '';
     var traces = data.data || data.traces || data.list || data.track || data.result || [];
     
-    // 如果是对象格式的traces
     if (traces && typeof traces === 'object' && !Array.isArray(traces)) {
         var temp = [];
         for (var key in traces) {
@@ -542,6 +553,9 @@ function renderTrackResult(data, trackingNumber) {
     }
     if (status) {
         html += ' &nbsp;|&nbsp; <strong>状态：</strong>' + status;
+    }
+    if (phoneTail) {
+        html += ' &nbsp;|&nbsp; <span style="color:#999;">📱 手机尾号：' + phoneTail + '</span>';
     }
     html += '</div>';
     
@@ -566,8 +580,7 @@ function renderTrackResult(data, trackingNumber) {
 function closeTrack() {
     document.getElementById('trackModal').className = 'track-modal';
 }
-
-// ===== 以上物流查询功能 =====
+// ===== 物流查询功能结束 =====
 
 async function loadAgentConfig() {
     currentAgentId = getAgentId();
@@ -669,7 +682,7 @@ async function doQuery() {
 
                 var trackingHtml = '';
                 if (o.tracking_number) {
-                    trackingHtml = '<div>📮 运单号：<span class="tracking">' + o.tracking_number + '</span> <button class="copy-btn" onclick="copyText(\'' + o.tracking_number + '\')">复制</button> <button class="track-btn" onclick="queryTrack(\'' + o.tracking_number + '\')">📦 查物流</button></div>';
+                    trackingHtml = '<div>📮 运单号：<span class="tracking">' + o.tracking_number + '</span> <button class="copy-btn" onclick="copyText(\'' + o.tracking_number + '\')">复制</button> <button class="track-btn" onclick="queryTrack(\'' + o.tracking_number + '\', \'' + o.customer_phone + '\')">📦 查物流</button></div>';
                 }
 
                 html += '<div class="order-item"><div class="top"><span><span class="status ' + statusCls[o.status] + '">' + statusMap[o.status] + '</span> <strong>' + o.customer_name + '</strong></span><span style="color:#999;font-size:12px;">' + (o.created_at || '') + '</span></div><div class="info"><div>📍 ' + (o.province||'') + (o.city||'') + (o.district||'') + ' ' + (o.detail_address||'') + '</div>' + remarks + trackingHtml + (o.pickup_code ? '<div>🔑 取件码：<span class="pickup">' + o.pickup_code + '</span></div>' : '') + '</div>' + (actions ? '<div class="actions">' + actions + '</div>' : '') + '</div>';
