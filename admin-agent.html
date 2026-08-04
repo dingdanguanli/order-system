@@ -73,23 +73,36 @@
         .settings-area .preview-img { max-width: 100%; max-height: 150px; border-radius: 8px; margin-top: 6px; border: 1px solid #eee; }
         .settings-hint { font-size: 12px; color: #999; margin-top: 4px; }
         .search-area { background: white; border-radius: 10px; padding: 12px 14px; margin-bottom: 12px; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
-        .search-area input { flex: 1; padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; min-width: 150px; }
-        .search-area input:focus { outline: none; border-color: #4a6cf7; }
+        .search-area input[type="text"] { flex: 1; padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; min-width: 150px; }
+        .search-area input[type="text"]:focus { outline: none; border-color: #4a6cf7; }
+        .search-area input[type="date"] { padding: 8px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; background: white; }
+        .search-area input[type="date"]:focus { outline: none; border-color: #4a6cf7; }
         .search-area .btn-search { padding: 8px 20px; background: #4a6cf7; color: white; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; }
         .search-area .btn-search:active { background: #3a56d4; }
         .search-area .btn-clear { padding: 8px 16px; background: #ff6b6b; color: white; border: none; border-radius: 8px; font-size: 14px; cursor: pointer; }
         .search-area .btn-clear:active { background: #e05555; }
+        .search-area .info-text { font-size: 13px; color: #666; margin-left: 4px; }
         .search-hint { font-size: 12px; color: #999; }
         .copy-btn { background: none; border: 1px solid #ddd; padding: 2px 12px; border-radius: 4px; font-size: 12px; cursor: pointer; color: #666; }
         .copy-btn:active { background: #f0f0f0; }
         .track-btn { background: none; border: 1px solid #4a6cf7; padding: 2px 12px; border-radius: 4px; font-size: 12px; cursor: pointer; color: #4a6cf7; }
         .track-btn:active { background: #eef2ff; }
+        .pagination { display: flex; justify-content: center; align-items: center; gap: 12px; padding: 12px 0; flex-wrap: wrap; }
+        .pagination button { padding: 8px 20px; border: 1px solid #ddd; border-radius: 8px; background: white; font-size: 14px; cursor: pointer; }
+        .pagination button:disabled { opacity: 0.5; cursor: not-allowed; }
+        .pagination button:active:not(:disabled) { background: #f0f0f0; }
+        .pagination .page-info { font-size: 14px; color: #666; }
+
         .bottom-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; width: 100%; }
-        .bottom-row input { flex: 1; min-width: 70px; padding: 6px 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; background: white; }
+        .bottom-row input { padding: 6px 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; background: white; flex: 1; min-width: 70px; }
+        .bottom-row input:focus { outline: none; border-color: #4a6cf7; }
         .bottom-row .input-tracking { flex: 1.8; min-width: 140px; }
-        .bottom-row .input-amount { flex: 1.2; min-width: 100px; }
+        .bottom-row .input-remark { flex: 1.5; min-width: 100px; }
+        .bottom-row .input-amount { flex: 0.8; min-width: 80px; }
+        .bottom-row .input-pickup { flex: 0.8; min-width: 70px; }
+        .bottom-row select { padding: 6px 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; background: white; flex: 1; min-width: 70px; }
         .bottom-row .btn-group { display: flex; gap: 6px; margin-left: auto; }
-        .bottom-row select { flex: 1; min-width: 70px; padding: 6px 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; background: white; }
+        .bottom-row .btn-group button { padding: 6px 16px; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; font-weight: 500; }
 
         .track-modal {
             display: none;
@@ -180,10 +193,11 @@
 
         <div id="tabOrders" class="tab-content">
             <div class="search-area">
-                <input id="searchInput" type="text" placeholder="输入运单号或手机号后四位查询..." onkeyup="if(event.keyCode===13) doSearch()">
+                <input type="text" id="searchInput" placeholder="输入运单号或手机号后四位查询..." onkeyup="if(event.keyCode===13) doSearch()">
+                <input type="date" id="dateInput">
                 <button class="btn-search" onclick="doSearch()">🔍 搜索</button>
                 <button class="btn-clear" onclick="clearSearch()">✕ 清除</button>
-                <span class="search-hint">💡 输入运单号或手机号后四位即可搜索</span>
+                <span class="info-text" id="totalInfo">共 0 条</span>
             </div>
             <div class="readonly-tip">🔒 你可以查看订单，确认收款和确认修改</div>
             <div class="stats" id="statsBar">
@@ -197,6 +211,11 @@
                 <span class="stat-item" data-status="6" onclick="loadOrders('6',this)">❌ 已拒绝 <span class="num" id="count6">0</span></span>
             </div>
             <div id="orderList"></div>
+            <div class="pagination" id="pagination">
+                <button onclick="goPage('prev')" id="prevBtn">⬅ 上一页</button>
+                <span class="page-info" id="pageInfo">第 1 / 1 页</span>
+                <button onclick="goPage('next')" id="nextBtn">下一页 ➡</button>
+            </div>
         </div>
 
         <div id="tabSettings" class="tab-content" style="display:none;">
@@ -244,6 +263,10 @@ var AGENT_NAMES = {1:'深圳总仓1001',2:'深圳总仓1002',3:'深圳总仓1003
 var currentAgentId = 1;
 var currentSearch = '';
 var currentStatus = 'all';
+var currentDate = '';
+var currentPage = 1;
+var totalPages = 1;
+var totalCount = 0;
 
 function showToast(msg) {
     var t = document.getElementById('toast');
@@ -271,7 +294,8 @@ function doRefresh() {
 function doSearch() {
     var input = document.getElementById('searchInput');
     currentSearch = input.value.trim();
-    if (currentSearch === '') {
+    currentPage = 1;
+    if (currentSearch === '' && !currentDate) {
         loadOrders(currentStatus);
         return;
     }
@@ -280,7 +304,21 @@ function doSearch() {
 
 function clearSearch() {
     document.getElementById('searchInput').value = '';
+    document.getElementById('dateInput').value = '';
     currentSearch = '';
+    currentDate = '';
+    currentPage = 1;
+    loadOrders(currentStatus);
+}
+
+function goPage(direction) {
+    if (direction === 'prev' && currentPage > 1) {
+        currentPage--;
+    } else if (direction === 'next' && currentPage < totalPages) {
+        currentPage++;
+    } else {
+        return;
+    }
     loadOrders(currentStatus);
 }
 
@@ -293,6 +331,11 @@ function doLogin() {
         document.getElementById('adminPanel').style.display = 'block';
         document.getElementById('loginError').style.display = 'none';
         document.getElementById('agentInfo').textContent = AGENT_NAMES[agentId];
+        // 设置默认日期为今天
+        var today = new Date();
+        var dateStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
+        document.getElementById('dateInput').value = dateStr;
+        currentDate = dateStr;
         loadOrders('all');
         loadSettings();
     } else {
@@ -371,13 +414,11 @@ function copyText(text) {
     }
 }
 
-// 一键复制订单信息（姓名、电话、地址、商品备注）
 function copyOrderInfo(name, phone, address, productNote) {
     var text = name + '\n' + phone + '\n' + address + '\n' + productNote;
     copyText(text);
 }
 
-// ===== 物流查询功能 =====
 function queryTrack(trackingNumber, recipientPhone, customerPhone) {
     if (!trackingNumber || trackingNumber.trim() === '') {
         showToast('❌ 运单号为空，无法查询');
@@ -400,9 +441,6 @@ function queryTrack(trackingNumber, recipientPhone, customerPhone) {
         url += '&tel=' + phoneTail;
     }
     
-    console.log('物流查询URL:', url);
-    console.log('查物流用的手机号:', phoneForTrack, '尾号:', phoneTail);
-    
     fetch(url, {
         headers: {
             'Authorization': 'APPCODE ' + APP_CODE
@@ -415,7 +453,6 @@ function queryTrack(trackingNumber, recipientPhone, customerPhone) {
         return res.json(); 
     })
     .then(function(data) {
-        console.log('物流查询返回:', data);
         renderTrackResult(data, trackingNumber, phoneTail);
     })
     .catch(function(err) {
@@ -479,7 +516,6 @@ function renderTrackResult(data, trackingNumber, phoneTail) {
 function closeTrack() {
     document.getElementById('trackModal').className = 'track-modal';
 }
-// ===== 物流查询功能结束 =====
 
 async function loadOrders(status, el, search) {
     currentStatus = status;
@@ -487,10 +523,18 @@ async function loadOrders(status, el, search) {
     if (el) el.classList.add('active');
     var list = document.getElementById('orderList');
     list.innerHTML = '<div class="loading">⏳ 加载中...</div>';
+    
+    var dateInput = document.getElementById('dateInput');
+    currentDate = dateInput ? dateInput.value : '';
+    
     try {
         var url = API_BASE + '/api/agent/orders?agentId=' + currentAgentId + '&password=' + AGENT_PASSWORDS[currentAgentId];
+        url += '&page=' + currentPage + '&pageSize=20';
         if (search) {
             url += '&search=' + encodeURIComponent(search);
+        }
+        if (currentDate) {
+            url += '&date=' + encodeURIComponent(currentDate);
         }
         var resp = await fetch(url);
         var data = await resp.json();
@@ -498,15 +542,32 @@ async function loadOrders(status, el, search) {
         if (data.code === 200 && data.data) {
             var orders = data.data;
             if (status !== 'all') { orders = orders.filter(function(o) { return o.status === parseInt(status); }); }
+            totalCount = data.total || 0;
+            totalPages = data.totalPages || 1;
+            currentPage = data.page || 1;
             renderOrders(orders);
             updateCounts(data.data);
-        } else { list.innerHTML = '<div class="empty-tip">暂无订单</div>'; }
-    } catch(e) { list.innerHTML = '<div class="empty-tip">加载失败，请刷新</div>'; }
+            updatePagination();
+            document.getElementById('totalInfo').textContent = '共 ' + totalCount + ' 条';
+        } else { 
+            list.innerHTML = '<div class="empty-tip">暂无订单</div>';
+            totalCount = 0;
+            totalPages = 1;
+            updatePagination();
+            document.getElementById('totalInfo').textContent = '共 0 条';
+        }
+    } catch(e) { 
+        list.innerHTML = '<div class="empty-tip">加载失败，请刷新</div>';
+        console.error(e);
+    }
 }
 
 function renderOrders(orders) {
     var list = document.getElementById('orderList');
-    if (!orders || orders.length === 0) { list.innerHTML = '<div class="empty-tip">🎉 暂无订单</div>'; return; }
+    if (!orders || orders.length === 0) { 
+        list.innerHTML = '<div class="empty-tip">🎉 暂无订单</div>'; 
+        return; 
+    }
     var statusMap = ['待付款', '已付款待确认', '已修改待代理确认', '已修改待总后台确认', '已收款待发货', '已发货', '已拒绝'];
     var html = '';
     orders.forEach(function(order) {
@@ -529,7 +590,7 @@ function renderOrders(orders) {
         }
         var fullAddress = (order.province||'') + (order.city||'') + (order.district||'') + ' ' + (order.detail_address||'');
         var amountDisplay = order.amount ? '💰 ' + order.amount : '';
-        html += '<div class="order-card"><div class="top"><div><span class="badge s' + order.status + '">' + statusMap[order.status] + '</span><span class="name">' + order.customer_name + '</span><span class="phone">' + order.customer_phone + '</span>' + modifiedTag + '</div><div><button class="copy-order-btn" onclick="copyOrderInfo(\'' + order.customer_name.replace(/'/g, "\\'") + '\', \'' + order.customer_phone + '\', \'' + fullAddress.replace(/'/g, "\\'") + '\', \'' + (order.product_note||'').replace(/'/g, "\\'") + '\')">📋复制</button><span class="time" style="margin-left:6px;">' + (order.created_at||'') + '</span></div></div><div class="info"><div>📍 ' + fullAddress + '</div><div>📝 ' + (order.product_note||'无备注') + '</div>' + (amountDisplay ? '<div>💰 ' + amountDisplay + '</div>' : '') + trackingHtml + (order.pickup_code ? '<div>🔑 取件码：<span class="pickup">' + order.pickup_code + '</span></div>' : '') + (order.admin_remark ? '<div>💬 商家备注：' + order.admin_remark + '</div>' : '') + modifyHtml + '</div><div class="bottom" style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;background:#f8f9fa;padding:10px;border-radius:10px;"><div class="bottom-row"><select id="s_' + order.id + '"><option value="0" ' + (order.status===0?'selected':'') + '>待付款</option><option value="1" ' + (order.status===1?'selected':'') + '>已付款待确认</option><option value="2" ' + (order.status===2?'selected':'') + '>已修改待代理确认</option><option value="3" ' + (order.status===3?'selected':'') + '>已修改待总后台确认</option><option value="4" ' + (order.status===4?'selected':'') + '>已收款待发货</option><option value="5" ' + (order.status===5?'selected':'') + '>已发货</option><option value="6" ' + (order.status===6?'selected':'') + '>已拒绝</option></select><input type="text" id="t_' + order.id + '" class="input-tracking" placeholder="" value="' + (order.tracking_number||'') + '"><input type="text" id="p_' + order.id + '" placeholder="" value="' + (order.pickup_code||'') + '"></div><div class="bottom-row"><input type="text" id="r_' + order.id + '" placeholder="" value="' + (order.admin_remark||'') + '"><input type="text" id="a_' + order.id + '" class="input-amount" placeholder="输入金额，仅代理可见" value="' + (order.amount||'') + '"><div class="btn-group">' + (actionsHtml ? actionsHtml : '') + '<button class="btn-action" style="background:#4a6cf7;color:white;" onclick="saveOrder(' + order.id + ')">💾 保存</button></div></div></div></div>';
+        html += '<div class="order-card"><div class="top"><div><span class="badge s' + order.status + '">' + statusMap[order.status] + '</span><span class="name">' + order.customer_name + '</span><span class="phone">' + order.customer_phone + '</span>' + modifiedTag + '</div><div><button class="copy-order-btn" onclick="copyOrderInfo(\'' + order.customer_name.replace(/'/g, "\\'") + '\', \'' + order.customer_phone + '\', \'' + fullAddress.replace(/'/g, "\\'") + '\', \'' + (order.product_note||'').replace(/'/g, "\\'") + '\')">📋复制</button><span class="time" style="margin-left:6px;">' + (order.created_at||'') + '</span></div></div><div class="info"><div>📍 ' + fullAddress + '</div><div>📝 ' + (order.product_note||'无备注') + '</div>' + (amountDisplay ? '<div>💰 ' + amountDisplay + '</div>' : '') + trackingHtml + (order.pickup_code ? '<div>🔑 取件码：<span class="pickup">' + order.pickup_code + '</span></div>' : '') + (order.admin_remark ? '<div>💬 商家备注：' + order.admin_remark + '</div>' : '') + modifyHtml + '</div><div class="bottom" style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;background:#f8f9fa;padding:10px;border-radius:10px;"><div class="bottom-row"><select id="s_' + order.id + '"><option value="0" ' + (order.status===0?'selected':'') + '>待付款</option><option value="1" ' + (order.status===1?'selected':'') + '>已付款待确认</option><option value="2" ' + (order.status===2?'selected':'') + '>已修改待代理确认</option><option value="3" ' + (order.status===3?'selected':'') + '>已修改待总后台确认</option><option value="4" ' + (order.status===4?'selected':'') + '>已收款待发货</option><option value="5" ' + (order.status===5?'selected':'') + '>已发货</option><option value="6" ' + (order.status===6?'selected':'') + '>已拒绝</option></select><input type="text" id="t_' + order.id + '" class="input-tracking" placeholder="请输入运单号" value="' + (order.tracking_number||'') + '"><input type="text" id="p_' + order.id + '" class="input-pickup" placeholder="请输入取件码" value="' + (order.pickup_code||'') + '"></div><div class="bottom-row"><input type="text" id="r_' + order.id + '" class="input-remark" placeholder="请输入备注" value="' + (order.admin_remark||'') + '"><input type="text" id="a_' + order.id + '" class="input-amount" placeholder="输入金额，仅代理可见" value="' + (order.amount||'') + '"><div class="btn-group">' + (actionsHtml ? actionsHtml : '') + '<button class="btn-action" style="background:#4a6cf7;color:white;" onclick="saveOrder(' + order.id + ')">💾 保存</button></div></div></div></div>';
     });
     list.innerHTML = html;
 }
@@ -545,6 +606,12 @@ function updateCounts(orders) {
     document.getElementById('count4').textContent = counts[4];
     document.getElementById('count5').textContent = counts[5];
     document.getElementById('count6').textContent = counts[6];
+}
+
+function updatePagination() {
+    document.getElementById('pageInfo').textContent = '第 ' + currentPage + ' / ' + totalPages + ' 页';
+    document.getElementById('prevBtn').disabled = (currentPage <= 1);
+    document.getElementById('nextBtn').disabled = (currentPage >= totalPages);
 }
 
 async function saveOrder(orderId) {
@@ -661,6 +728,11 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     document.getElementById('trackModalClose').addEventListener('click', closeTrack);
     document.getElementById('trackModal').addEventListener('click', function(e) { if (e.target === this) closeTrack(); });
+    document.getElementById('dateInput').addEventListener('change', function() {
+        currentDate = this.value;
+        currentPage = 1;
+        loadOrders(currentStatus);
+    });
 });
 
 async function saveSettings() {
@@ -706,6 +778,7 @@ window.copyOrderInfo = copyOrderInfo;
 window.queryTrack = queryTrack;
 window.closeTrack = closeTrack;
 window.saveOrder = saveOrder;
+window.goPage = goPage;
 </script>
 </body>
 </html>
