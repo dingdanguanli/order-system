@@ -27,13 +27,16 @@
         .stats .stat-item.active { background: #4a6cf7; color: white; border-color: #4a6cf7; }
         .stats .stat-item .num { font-weight: 700; margin-right: 2px; }
         .order-card { background: white; border-radius: 14px; padding: 14px; margin-bottom: 12px; box-shadow: 0 1px 4px rgba(0,0,0,0.04); }
-        .order-card .top { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 4px; }
+        .order-card .top { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 4px; }
         .order-card .top .name { font-weight: 600; font-size: 15px; color: #333; }
         .order-card .top .phone { color: #666; font-size: 13px; }
         .order-card .top .time { color: #bbb; font-size: 11px; }
+        .order-card .top .copy-order-btn { background: none; border: 1px solid #4a6cf7; color: #4a6cf7; padding: 2px 10px; border-radius: 4px; font-size: 12px; cursor: pointer; }
+        .order-card .top .copy-order-btn:active { background: #eef2ff; }
         .order-card .info { margin-top: 6px; font-size: 13px; color: #666; line-height: 1.8; }
         .order-card .info .tracking { color: #333; font-weight: 500; }
         .order-card .info .pickup { color: #ff6b00; font-weight: 700; font-size: 16px; }
+        .order-card .info .amount-text { color: #333; font-weight: 500; }
         .badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; }
         .badge.s0 { background: #fff3cd; color: #856404; }
         .badge.s1 { background: #cce5ff; color: #004085; }
@@ -81,6 +84,12 @@
         .copy-btn:active { background: #f0f0f0; }
         .track-btn { background: none; border: 1px solid #4a6cf7; padding: 2px 12px; border-radius: 4px; font-size: 12px; cursor: pointer; color: #4a6cf7; }
         .track-btn:active { background: #eef2ff; }
+        .bottom-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; width: 100%; }
+        .bottom-row input { flex: 1; min-width: 70px; padding: 6px 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; background: white; }
+        .bottom-row .input-tracking { flex: 1.8; min-width: 140px; }
+        .bottom-row .input-amount { flex: 1.2; min-width: 100px; }
+        .bottom-row .btn-group { display: flex; gap: 6px; margin-left: auto; }
+        .bottom-row select { flex: 1; min-width: 70px; padding: 6px 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; background: white; }
 
         .track-modal {
             display: none;
@@ -362,6 +371,12 @@ function copyText(text) {
     }
 }
 
+// 一键复制订单信息（姓名、电话、地址、商品备注）
+function copyOrderInfo(name, phone, address, productNote) {
+    var text = name + '\n' + phone + '\n' + address + '\n' + productNote;
+    copyText(text);
+}
+
 // ===== 物流查询功能 =====
 function queryTrack(trackingNumber, recipientPhone, customerPhone) {
     if (!trackingNumber || trackingNumber.trim() === '') {
@@ -374,7 +389,6 @@ function queryTrack(trackingNumber, recipientPhone, customerPhone) {
     modal.className = 'track-modal show';
     result.innerHTML = '<div class="track-loading">⏳ 查询中...</div>';
     
-    // 优先用收件人手机号，如果没有则用下单人手机号（兼容旧订单）
     var phoneForTrack = recipientPhone || customerPhone || '';
     var phoneTail = '';
     if (phoneForTrack && phoneForTrack.length >= 4) {
@@ -513,7 +527,9 @@ function renderOrders(orders) {
         if (order.tracking_number) {
             trackingHtml = '<div>📮 运单号：<span class="tracking">' + order.tracking_number + '</span> <button class="copy-btn" onclick="copyText(\'' + order.tracking_number + '\')">复制</button> <button class="track-btn" onclick="queryTrack(\'' + order.tracking_number + '\', \'' + recipientPhone + '\', \'' + order.customer_phone + '\')">📦 查物流</button></div>';
         }
-        html += '<div class="order-card"><div class="top"><div><span class="badge s' + order.status + '">' + statusMap[order.status] + '</span><span class="name">' + order.customer_name + '</span><span class="phone">' + order.customer_phone + '</span>' + modifiedTag + '</div><span class="time">' + (order.created_at||'') + '</span></div><div class="info"><div>📍 ' + (order.province||'') + (order.city||'') + (order.district||'') + ' ' + (order.detail_address||'') + '</div><div>📝 ' + (order.product_note||'无备注') + '</div>' + trackingHtml + (order.pickup_code ? '<div>🔑 取件码：<span class="pickup">' + order.pickup_code + '</span></div>' : '') + (order.admin_remark ? '<div>💬 商家备注：' + order.admin_remark + '</div>' : '') + modifyHtml + '</div>' + (actionsHtml ? '<div style="margin-top:10px;display:flex;gap:8px;flex-wrap:wrap;">' + actionsHtml + '</div>' : '') + '</div>';
+        var fullAddress = (order.province||'') + (order.city||'') + (order.district||'') + ' ' + (order.detail_address||'');
+        var amountDisplay = order.amount ? '💰 ' + order.amount : '';
+        html += '<div class="order-card"><div class="top"><div><span class="badge s' + order.status + '">' + statusMap[order.status] + '</span><span class="name">' + order.customer_name + '</span><span class="phone">' + order.customer_phone + '</span>' + modifiedTag + '</div><div><button class="copy-order-btn" onclick="copyOrderInfo(\'' + order.customer_name.replace(/'/g, "\\'") + '\', \'' + order.customer_phone + '\', \'' + fullAddress.replace(/'/g, "\\'") + '\', \'' + (order.product_note||'').replace(/'/g, "\\'") + '\')">📋复制</button><span class="time" style="margin-left:6px;">' + (order.created_at||'') + '</span></div></div><div class="info"><div>📍 ' + fullAddress + '</div><div>📝 ' + (order.product_note||'无备注') + '</div>' + (amountDisplay ? '<div>💰 ' + amountDisplay + '</div>' : '') + trackingHtml + (order.pickup_code ? '<div>🔑 取件码：<span class="pickup">' + order.pickup_code + '</span></div>' : '') + (order.admin_remark ? '<div>💬 商家备注：' + order.admin_remark + '</div>' : '') + modifyHtml + '</div><div class="bottom" style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;background:#f8f9fa;padding:10px;border-radius:10px;"><div class="bottom-row"><select id="s_' + order.id + '"><option value="0" ' + (order.status===0?'selected':'') + '>待付款</option><option value="1" ' + (order.status===1?'selected':'') + '>已付款待确认</option><option value="2" ' + (order.status===2?'selected':'') + '>已修改待代理确认</option><option value="3" ' + (order.status===3?'selected':'') + '>已修改待总后台确认</option><option value="4" ' + (order.status===4?'selected':'') + '>已收款待发货</option><option value="5" ' + (order.status===5?'selected':'') + '>已发货</option><option value="6" ' + (order.status===6?'selected':'') + '>已拒绝</option></select><input type="text" id="t_' + order.id + '" class="input-tracking" placeholder="" value="' + (order.tracking_number||'') + '"><input type="text" id="p_' + order.id + '" placeholder="" value="' + (order.pickup_code||'') + '"></div><div class="bottom-row"><input type="text" id="r_' + order.id + '" placeholder="" value="' + (order.admin_remark||'') + '"><input type="text" id="a_' + order.id + '" class="input-amount" placeholder="输入金额，仅代理可见" value="' + (order.amount||'') + '"><div class="btn-group">' + (actionsHtml ? actionsHtml : '') + '<button class="btn-action" style="background:#4a6cf7;color:white;" onclick="saveOrder(' + order.id + ')">💾 保存</button></div></div></div></div>';
     });
     list.innerHTML = html;
 }
@@ -529,6 +545,65 @@ function updateCounts(orders) {
     document.getElementById('count4').textContent = counts[4];
     document.getElementById('count5').textContent = counts[5];
     document.getElementById('count6').textContent = counts[6];
+}
+
+async function saveOrder(orderId) {
+    var statusVal = document.getElementById('s_' + orderId);
+    var trackingVal = document.getElementById('t_' + orderId);
+    var pickupVal = document.getElementById('p_' + orderId);
+    var remarkVal = document.getElementById('r_' + orderId);
+    var amountVal = document.getElementById('a_' + orderId);
+    
+    if (!statusVal || !trackingVal || !pickupVal || !remarkVal || !amountVal) {
+        showToast('页面加载异常，请刷新重试');
+        return;
+    }
+    
+    var status = parseInt(statusVal.value);
+    var trackingNumber = trackingVal.value.trim();
+    var pickupCode = pickupVal.value.trim();
+    var adminRemark = remarkVal.value.trim();
+    var amount = amountVal.value.trim();
+    
+    var btn = document.querySelector('.order-card .btn-action[onclick*="saveOrder(' + orderId + ')"]');
+    if (btn) {
+        btn.textContent = '⏳';
+        btn.disabled = true;
+    }
+    
+    try {
+        var resp = await fetch(API_BASE + '/api/master/order/update', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                password: 'Aa7758521',
+                id: orderId,
+                status: status,
+                trackingNumber: trackingNumber,
+                pickupCode: pickupCode,
+                adminRemark: adminRemark,
+                recipientPhone: '',
+                amount: amount
+            })
+        });
+        var data = await resp.json();
+        if (data.code === 200) {
+            showToast('✅ 保存成功');
+            loadOrders(currentStatus, document.querySelector('#statsBar .stat-item.active'), currentSearch);
+        } else {
+            showToast(data.msg || '保存失败');
+            if (btn) {
+                btn.textContent = '💾 保存';
+                btn.disabled = false;
+            }
+        }
+    } catch(e) {
+        showToast('网络异常，请重试');
+        if (btn) {
+            btn.textContent = '💾 保存';
+            btn.disabled = false;
+        }
+    }
 }
 
 async function confirmPayment(orderId) {
@@ -627,8 +702,10 @@ window.saveSettings = saveSettings;
 window.switchTab = switchTab;
 window.loadOrders = loadOrders;
 window.copyText = copyText;
+window.copyOrderInfo = copyOrderInfo;
 window.queryTrack = queryTrack;
 window.closeTrack = closeTrack;
+window.saveOrder = saveOrder;
 </script>
 </body>
 </html>
