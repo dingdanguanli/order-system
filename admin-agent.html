@@ -97,9 +97,10 @@
         .bottom-row input { padding: 6px 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; background: white; flex: 1; min-width: 70px; }
         .bottom-row input:focus { outline: none; border-color: #4a6cf7; }
         .bottom-row .input-tracking { flex: 1.8; min-width: 140px; }
-        .bottom-row .input-remark { flex: 1.5; min-width: 100px; }
-        .bottom-row .input-amount { flex: 0.8; min-width: 80px; }
-        .bottom-row .input-pickup { flex: 0.8; min-width: 70px; }
+        .bottom-row .input-remark { flex: 1.2; min-width: 90px; }
+        .bottom-row .input-phone { flex: 0.7; min-width: 70px; max-width: 110px; }
+        .bottom-row .input-amount { flex: 0.9; min-width: 80px; }
+        .bottom-row .input-pickup { flex: 0.7; min-width: 70px; max-width: 110px; }
         .bottom-row select { padding: 6px 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; background: white; flex: 1; min-width: 70px; }
         .bottom-row .btn-group { display: flex; gap: 6px; margin-left: auto; }
         .bottom-row .btn-group button { padding: 6px 16px; border: none; border-radius: 6px; font-size: 13px; cursor: pointer; font-weight: 500; }
@@ -331,7 +332,6 @@ function doLogin() {
         document.getElementById('adminPanel').style.display = 'block';
         document.getElementById('loginError').style.display = 'none';
         document.getElementById('agentInfo').textContent = AGENT_NAMES[agentId];
-        // 设置默认日期为今天
         var today = new Date();
         var dateStr = today.getFullYear() + '-' + String(today.getMonth()+1).padStart(2,'0') + '-' + String(today.getDate()).padStart(2,'0');
         document.getElementById('dateInput').value = dateStr;
@@ -441,6 +441,9 @@ function queryTrack(trackingNumber, recipientPhone, customerPhone) {
         url += '&tel=' + phoneTail;
     }
     
+    console.log('物流查询URL:', url);
+    console.log('查物流用的手机号尾号:', phoneTail);
+    
     fetch(url, {
         headers: {
             'Authorization': 'APPCODE ' + APP_CODE
@@ -453,6 +456,7 @@ function queryTrack(trackingNumber, recipientPhone, customerPhone) {
         return res.json(); 
     })
     .then(function(data) {
+        console.log('物流查询返回:', data);
         renderTrackResult(data, trackingNumber, phoneTail);
     })
     .catch(function(err) {
@@ -590,7 +594,7 @@ function renderOrders(orders) {
         }
         var fullAddress = (order.province||'') + (order.city||'') + (order.district||'') + ' ' + (order.detail_address||'');
         var amountDisplay = order.amount || '';
-        html += '<div class="order-card"><div class="top"><div><span class="badge s' + order.status + '">' + statusMap[order.status] + '</span><span class="name">' + order.customer_name + '</span> <span class="phone">' + order.customer_phone + '</span>' + modifiedTag + '</div><div><button class="copy-order-btn" onclick="copyOrderInfo(\'' + order.customer_name.replace(/'/g, "\\'") + '\', \'' + order.customer_phone + '\', \'' + fullAddress.replace(/'/g, "\\'") + '\', \'' + (order.product_note||'').replace(/'/g, "\\'") + '\')">📋复制</button><span class="time" style="margin-left:6px;">' + (order.created_at||'') + '</span></div></div><div class="info"><div>📍 ' + fullAddress + '</div><div>📝 ' + (order.product_note||'无备注') + '</div>' + (amountDisplay ? '<div>💰 ' + amountDisplay + '</div>' : '') + trackingHtml + (order.pickup_code ? '<div>🔑 取件码：<span class="pickup">' + order.pickup_code + '</span></div>' : '') + (order.admin_remark ? '<div>💬 商家备注：' + order.admin_remark + '</div>' : '') + modifyHtml + '</div><div class="bottom" style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;background:#f8f9fa;padding:10px;border-radius:10px;"><div class="bottom-row"><select id="s_' + order.id + '"><option value="0" ' + (order.status===0?'selected':'') + '>待付款</option><option value="1" ' + (order.status===1?'selected':'') + '>已付款待确认</option><option value="2" ' + (order.status===2?'selected':'') + '>已修改待代理确认</option><option value="3" ' + (order.status===3?'selected':'') + '>已修改待总后台确认</option><option value="4" ' + (order.status===4?'selected':'') + '>已收款待发货</option><option value="5" ' + (order.status===5?'selected':'') + '>已发货</option><option value="6" ' + (order.status===6?'selected':'') + '>已拒绝</option></select><input type="text" id="t_' + order.id + '" class="input-tracking" placeholder="请输入运单号" value="' + (order.tracking_number||'') + '"><input type="text" id="p_' + order.id + '" class="input-pickup" placeholder="请输入取件码" value="' + (order.pickup_code||'') + '"></div><div class="bottom-row"><input type="text" id="r_' + order.id + '" class="input-remark" placeholder="请输入备注" value="' + (order.admin_remark||'') + '"><input type="text" id="a_' + order.id + '" class="input-amount" placeholder="输入金额，仅代理可见" value="' + (order.amount||'') + '"><div class="btn-group">' + (actionsHtml ? actionsHtml : '') + '<button class="btn-action" style="background:#4a6cf7;color:white;" onclick="saveOrder(' + order.id + ')">💾 保存</button></div></div></div></div>';
+        html += '<div class="order-card"><div class="top"><div><span class="badge s' + order.status + '">' + statusMap[order.status] + '</span><span class="name">' + order.customer_name + '</span> <span class="phone">' + order.customer_phone + '</span>' + modifiedTag + '</div><div><button class="copy-order-btn" onclick="copyOrderInfo(\'' + order.customer_name.replace(/'/g, "\\'") + '\', \'' + order.customer_phone + '\', \'' + fullAddress.replace(/'/g, "\\'") + '\', \'' + (order.product_note||'').replace(/'/g, "\\'") + '\')">📋复制</button><span class="time" style="margin-left:6px;">' + (order.created_at||'') + '</span></div></div><div class="info"><div>📍 ' + fullAddress + '</div><div>📝 ' + (order.product_note||'无备注') + '</div>' + (amountDisplay ? '<div>💰 ' + amountDisplay + '</div>' : '') + trackingHtml + (order.pickup_code ? '<div>🔑 取件码：<span class="pickup">' + order.pickup_code + '</span></div>' : '') + (order.admin_remark ? '<div>💬 商家备注：' + order.admin_remark + '</div>' : '') + modifyHtml + '</div><div class="bottom" style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;align-items:center;background:#f8f9fa;padding:10px;border-radius:10px;"><div class="bottom-row"><select id="s_' + order.id + '"><option value="0" ' + (order.status===0?'selected':'') + '>待付款</option><option value="1" ' + (order.status===1?'selected':'') + '>已付款待确认</option><option value="2" ' + (order.status===2?'selected':'') + '>已修改待代理确认</option><option value="3" ' + (order.status===3?'selected':'') + '>已修改待总后台确认</option><option value="4" ' + (order.status===4?'selected':'') + '>已收款待发货</option><option value="5" ' + (order.status===5?'selected':'') + '>已发货</option><option value="6" ' + (order.status===6?'selected':'') + '>已拒绝</option></select><input type="text" id="t_' + order.id + '" class="input-tracking" placeholder="请输入运单号" value="' + (order.tracking_number||'') + '"><input type="text" id="p_' + order.id + '" class="input-pickup" placeholder="请输入取件码" value="' + (order.pickup_code||'') + '"></div><div class="bottom-row"><input type="text" id="r_' + order.id + '" class="input-remark" placeholder="请输入备注" value="' + (order.admin_remark||'') + '"><input type="text" id="ph_' + order.id + '" class="input-phone" placeholder="收件后4位" value="' + (order.recipient_phone||'') + '"><input type="text" id="a_' + order.id + '" class="input-amount" placeholder="输入金额，仅代理可见" value="' + (order.amount||'') + '"><div class="btn-group">' + (actionsHtml ? actionsHtml : '') + '<button class="btn-action" style="background:#4a6cf7;color:white;" onclick="saveOrder(' + order.id + ')">💾 保存</button></div></div></div></div>';
     });
     list.innerHTML = html;
 }
@@ -619,9 +623,10 @@ async function saveOrder(orderId) {
     var trackingVal = document.getElementById('t_' + orderId);
     var pickupVal = document.getElementById('p_' + orderId);
     var remarkVal = document.getElementById('r_' + orderId);
+    var phoneVal = document.getElementById('ph_' + orderId);
     var amountVal = document.getElementById('a_' + orderId);
     
-    if (!statusVal || !trackingVal || !pickupVal || !remarkVal || !amountVal) {
+    if (!statusVal || !trackingVal || !pickupVal || !remarkVal || !phoneVal || !amountVal) {
         showToast('页面加载异常，请刷新重试');
         return;
     }
@@ -630,6 +635,7 @@ async function saveOrder(orderId) {
     var trackingNumber = trackingVal.value.trim();
     var pickupCode = pickupVal.value.trim();
     var adminRemark = remarkVal.value.trim();
+    var recipientPhone = phoneVal.value.trim();
     var amount = amountVal.value.trim();
     
     var btn = document.querySelector('.order-card .btn-action[onclick*="saveOrder(' + orderId + ')"]');
@@ -649,7 +655,7 @@ async function saveOrder(orderId) {
                 trackingNumber: trackingNumber,
                 pickupCode: pickupCode,
                 adminRemark: adminRemark,
-                recipientPhone: '',
+                recipientPhone: recipientPhone,
                 amount: amount
             })
         });
