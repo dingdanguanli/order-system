@@ -33,7 +33,10 @@
         .order-card .top .name { font-weight: 600; font-size: 15px; color: #333; }
         .order-card .top .phone { color: #666; font-size: 13px; }
         .order-card .top .time { color: #bbb; font-size: 11px; }
+        .order-card .top .copy-order-btn { background: none; border: 1px solid #4a6cf7; color: #4a6cf7; padding: 2px 10px; border-radius: 4px; font-size: 12px; cursor: pointer; }
+        .order-card .top .copy-order-btn:active { background: #eef2ff; }
         .order-card .info { margin-top: 6px; font-size: 13px; color: #666; line-height: 1.6; }
+        .order-card .info .amount-text { color: #333; font-weight: 500; }
         .order-card .bottom { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; background: #f8f9fa; padding: 10px; border-radius: 10px; }
         .order-card .bottom select { padding: 6px 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; background: white; flex: 1; min-width: 70px; }
         .order-card .bottom input { padding: 6px 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 13px; background: white; flex: 1; min-width: 70px; }
@@ -148,6 +151,31 @@
         .track-error { text-align: center; color: #ff4757; padding: 30px 0; }
         .track-company { font-size: 14px; color: #666; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 2px solid #eee; }
         .track-company strong { color: #333; }
+
+        .bottom-row-2 {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            align-items: center;
+            width: 100%;
+        }
+        .bottom-row-2 input {
+            flex: 1;
+            min-width: 80px;
+        }
+        .bottom-row-2 .input-amount {
+            flex: 1.2;
+            min-width: 100px;
+        }
+        .bottom-row-2 .input-tracking {
+            flex: 1.8;
+            min-width: 140px;
+        }
+        .bottom-row-2 .btn-group {
+            display: flex;
+            gap: 6px;
+            margin-left: auto;
+        }
     </style>
 </head>
 <body>
@@ -358,6 +386,12 @@ function copyText(text) {
     }
 }
 
+// 一键复制订单信息（姓名、电话、地址、商品备注）
+function copyOrderInfo(name, phone, address, productNote) {
+    var text = name + '\n' + phone + '\n' + address + '\n' + productNote;
+    copyText(text);
+}
+
 // ===== 物流查询功能 =====
 function queryTrack(trackingNumber, recipientPhone, customerPhone) {
     if (!trackingNumber || trackingNumber.trim() === '') {
@@ -370,7 +404,6 @@ function queryTrack(trackingNumber, recipientPhone, customerPhone) {
     modal.className = 'track-modal show';
     result.innerHTML = '<div class="track-loading">⏳ 查询中...</div>';
     
-    // 优先用收件人手机号，如果没有则用下单人手机号（兼容旧订单）
     var phoneForTrack = recipientPhone || customerPhone || '';
     var phoneTail = '';
     if (phoneForTrack && phoneForTrack.length >= 4) {
@@ -473,7 +506,7 @@ function exportExcel() {
     var agentNames = {1:'深圳总仓1001',2:'深圳总仓1002',3:'深圳总仓1003',4:'深圳总仓1004',5:'深圳总仓1005',6:'深圳总仓1006',7:'深圳总仓1007',8:'深圳总仓1008',9:'深圳总仓1009',10:'深圳总仓1010'};
     
     var rows = [];
-    rows.push(['订单号', '客户姓名', '手机号', '省份', '城市', '区/县', '详细地址', '商品备注', '状态', '所属代理', '运单号', '取件码', '总后台备注', '下单时间']);
+    rows.push(['订单号', '客户姓名', '手机号', '省份', '城市', '区/县', '详细地址', '商品备注', '状态', '所属代理', '运单号', '取件码', '总后台备注', '金额', '下单时间']);
     
     allOrdersData.forEach(function(order) {
         rows.push([
@@ -490,6 +523,7 @@ function exportExcel() {
             order.tracking_number || '',
             order.pickup_code || '',
             order.admin_remark || '',
+            order.amount || '',
             order.created_at || ''
         ]);
     });
@@ -696,13 +730,15 @@ function renderOrders(orders) {
         if (order.modify_history) {
             modifyHtml = formatModifyHistory(order.modify_history);
         }
-        // 获取收件人手机号（用于查物流），如果没有则用下单人手机号
         var recipientPhone = order.recipient_phone || '';
         var trackingHtml = '';
         if (order.tracking_number) {
             trackingHtml = '<div>📮 运单号：' + order.tracking_number + ' <button class="copy-btn" onclick="copyText(\'' + order.tracking_number + '\')">复制</button> <button class="track-btn" onclick="queryTrack(\'' + order.tracking_number + '\', \'' + recipientPhone + '\', \'' + order.customer_phone + '\')">📦 查物流</button></div>';
         }
-        html += '<div class="order-card" data-id="' + order.id + '"><div class="top"><div class="checkbox-cell"><input type="checkbox" class="order-checkbox" data-id="' + order.id + '" onchange="updateSelectedCount()"> <span class="badge s' + order.status + '">' + statusMap[order.status] + '</span><span class="name">' + order.customer_name + '</span><span class="phone">' + order.customer_phone + '</span><span class="agent-tag">' + agentNames[order.agent_id] + '</span>' + modifiedTag + '</div><span class="time">' + (order.created_at || '') + '</span></div><div class="info"><div>📍 ' + (order.province||'') + (order.city||'') + (order.district||'') + ' ' + (order.detail_address||'') + '</div><div>📝 ' + (order.product_note || '无备注') + '</div>' + trackingHtml + (order.pickup_code ? '<div>🔑 取件码：' + order.pickup_code + '</div>' : '') + (order.admin_remark ? '<div>💬 备注：' + order.admin_remark + '</div>' : '') + modifyHtml + '</div><div class="bottom"><select id="s_' + order.id + '"><option value="0" ' + (order.status===0?'selected':'') + '>待付款</option><option value="1" ' + (order.status===1?'selected':'') + '>已付款待确认</option><option value="2" ' + (order.status===2?'selected':'') + '>已修改待代理确认</option><option value="3" ' + (order.status===3?'selected':'') + '>已修改待总后台确认</option><option value="4" ' + (order.status===4?'selected':'') + '>已收款待发货</option><option value="5" ' + (order.status===5?'selected':'') + '>已发货</option><option value="6" ' + (order.status===6?'selected':'') + '>已拒绝</option></select><input type="text" id="t_' + order.id + '" placeholder="运单号" value="' + (order.tracking_number||'') + '"><input type="text" id="rphone_' + order.id + '" placeholder="收件人手机号" value="' + (recipientPhone || '') + '" style="min-width:120px;flex:0.8;"><input type="text" id="p_' + order.id + '" placeholder="取件码" value="' + (order.pickup_code||'') + '"><input type="text" id="r_' + order.id + '" placeholder="备注" value="' + (order.admin_remark||'') + '"><button class="btn-save" onclick="saveOrder(' + order.id + ')">💾 保存</button>' + actionButtons + '</div></div>';
+        // 构建地址字符串用于一键复制
+        var fullAddress = (order.province||'') + (order.city||'') + (order.district||'') + ' ' + (order.detail_address||'');
+        var amountDisplay = order.amount ? '💰 ' + order.amount : '';
+        html += '<div class="order-card" data-id="' + order.id + '"><div class="top"><div class="checkbox-cell"><input type="checkbox" class="order-checkbox" data-id="' + order.id + '" onchange="updateSelectedCount()"> <span class="badge s' + order.status + '">' + statusMap[order.status] + '</span><span class="name">' + order.customer_name + '</span><span class="phone">' + order.customer_phone + '</span><span class="agent-tag">' + agentNames[order.agent_id] + '</span>' + modifiedTag + '</div><div><button class="copy-order-btn" onclick="copyOrderInfo(\'' + order.customer_name.replace(/'/g, "\\'") + '\', \'' + order.customer_phone + '\', \'' + fullAddress.replace(/'/g, "\\'") + '\', \'' + (order.product_note||'').replace(/'/g, "\\'") + '\')">📋复制</button><span class="time" style="margin-left:6px;">' + (order.created_at || '') + '</span></div></div><div class="info"><div>📍 ' + fullAddress + '</div><div>📝 ' + (order.product_note || '无备注') + '</div>' + (amountDisplay ? '<div>💰 ' + amountDisplay + '</div>' : '') + trackingHtml + (order.pickup_code ? '<div>🔑 取件码：' + order.pickup_code + '</div>' : '') + (order.admin_remark ? '<div>💬 备注：' + order.admin_remark + '</div>' : '') + modifyHtml + '</div><div class="bottom"><div style="display:flex;flex-wrap:wrap;gap:6px;width:100%;"><select id="s_' + order.id + '" style="flex:1;min-width:70px;padding:6px 8px;border:1px solid #ddd;border-radius:6px;font-size:13px;background:white;"><option value="0" ' + (order.status===0?'selected':'') + '>待付款</option><option value="1" ' + (order.status===1?'selected':'') + '>已付款待确认</option><option value="2" ' + (order.status===2?'selected':'') + '>已修改待代理确认</option><option value="3" ' + (order.status===3?'selected':'') + '>已修改待总后台确认</option><option value="4" ' + (order.status===4?'selected':'') + '>已收款待发货</option><option value="5" ' + (order.status===5?'selected':'') + '>已发货</option><option value="6" ' + (order.status===6?'selected':'') + '>已拒绝</option></select><input type="text" id="t_' + order.id + '" placeholder="" value="' + (order.tracking_number||'') + '" style="flex:1.8;min-width:140px;padding:6px 8px;border:1px solid #ddd;border-radius:6px;font-size:13px;background:white;"><input type="text" id="p_' + order.id + '" placeholder="" value="' + (order.pickup_code||'') + '" style="flex:0.8;min-width:70px;padding:6px 8px;border:1px solid #ddd;border-radius:6px;font-size:13px;background:white;"></div><div style="display:flex;flex-wrap:wrap;gap:6px;width:100%;margin-top:4px;"><input type="text" id="r_' + order.id + '" placeholder="" value="' + (order.admin_remark||'') + '" style="flex:0.8;min-width:70px;padding:6px 8px;border:1px solid #ddd;border-radius:6px;font-size:13px;background:white;"><input type="text" id="a_' + order.id + '" placeholder="输入金额，仅代理可见" value="' + (order.amount||'') + '" style="flex:1.2;min-width:100px;padding:6px 8px;border:1px solid #ddd;border-radius:6px;font-size:13px;background:white;"><div style="display:flex;gap:6px;margin-left:auto;">' + (actionButtons ? actionButtons : '') + '<button class="btn-save" onclick="saveOrder(' + order.id + ')">💾 保存</button></div></div></div></div>';
     });
     list.innerHTML = html;
     updateSelectedCount();
@@ -711,20 +747,21 @@ function renderOrders(orders) {
 async function saveOrder(id) {
     var statusVal = document.getElementById('s_' + id);
     var trackingVal = document.getElementById('t_' + id);
-    var recipientPhoneVal = document.getElementById('rphone_' + id);
     var pickupVal = document.getElementById('p_' + id);
     var remarkVal = document.getElementById('r_' + id);
+    var amountVal = document.getElementById('a_' + id);
     
-    if (!statusVal || !trackingVal || !pickupVal || !remarkVal) {
+    if (!statusVal || !trackingVal || !pickupVal || !remarkVal || !amountVal) {
         showToast('页面加载异常，请刷新重试');
         return;
     }
     
     var status = parseInt(statusVal.value);
     var trackingNumber = trackingVal.value.trim();
-    var recipientPhone = recipientPhoneVal ? recipientPhoneVal.value.trim() : '';
     var pickupCode = pickupVal.value.trim();
     var adminRemark = remarkVal.value.trim();
+    var amount = amountVal.value.trim();
+    var recipientPhone = ''; // 总后台端已有收件人手机号，这里留空表示不修改
     
     var btn = document.querySelector('.order-card[data-id="' + id + '"] .btn-save');
     if (btn) {
@@ -743,7 +780,8 @@ async function saveOrder(id) {
                 trackingNumber: trackingNumber,
                 pickupCode: pickupCode,
                 adminRemark: adminRemark,
-                recipientPhone: recipientPhone
+                recipientPhone: recipientPhone,
+                amount: amount
             })
         });
         var data = await resp.json();
@@ -798,12 +836,12 @@ async function shipOrder(id) {
     var trackingNumber = trackingVal.value.trim();
     if (!trackingNumber) { showToast('请先填写运单号！'); return; }
     if (!confirm('确认发货吗？')) return;
-    var recipientPhoneVal = document.getElementById('rphone_' + id);
     var pickupVal = document.getElementById('p_' + id);
     var remarkVal = document.getElementById('r_' + id);
-    var recipientPhone = recipientPhoneVal ? recipientPhoneVal.value.trim() : '';
+    var amountVal = document.getElementById('a_' + id);
     var pickupCode = pickupVal ? pickupVal.value.trim() : '';
     var adminRemark = remarkVal ? remarkVal.value.trim() : '';
+    var amount = amountVal ? amountVal.value.trim() : '';
     try {
         var resp = await fetch(API_BASE + '/api/master/order/ship', {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
@@ -813,7 +851,8 @@ async function shipOrder(id) {
                 trackingNumber: trackingNumber, 
                 pickupCode: pickupCode, 
                 adminRemark: adminRemark,
-                recipientPhone: recipientPhone
+                recipientPhone: '',
+                amount: amount
             })
         });
         var data = await resp.json();
